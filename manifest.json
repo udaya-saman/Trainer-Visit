@@ -1,0 +1,20 @@
+{
+  "name": "Trainer Visit Report",
+  "short_name": "Visit Report",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#dce5dc",
+  "theme_color": "#ce232b",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
