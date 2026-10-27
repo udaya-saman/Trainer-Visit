@@ -1,0 +1,2099 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Trainer Visit Report</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<meta name="theme-color" content="#ce232b">
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js');
+  }
+</script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--G:#488351;--R:#ce232b;--D:#241F21;--bg:#dce5dc}
+body{font-family:Arial,Helvetica,sans-serif;font-size:14px;background:var(--bg);color:#222;padding-bottom:120px}
+
+/* ══════════════════════ COLOR BAR ══════════════════════ */
+#cbar{position:fixed;right:0;top:50%;transform:translateY(-50%);z-index:2000;
+  display:flex;flex-direction:column;gap:9px;padding:11px 8px 9px;
+  background:rgba(255,255,255,.97);border-radius:14px 0 0 14px;
+  box-shadow:-3px 0 16px rgba(0,0,0,.18);align-items:center}
+.cdot{width:30px;height:30px;border-radius:50%;cursor:pointer;
+  border:3px solid transparent;transition:all .15s;flex-shrink:0;display:flex;
+  align-items:center;justify-content:center}
+.cdot:hover,.cdot.active{border-color:#333;transform:scale(1.18)}
+.cdot.cr{background:#ce232b}
+.cdot.cg{background:#488351}
+.cdot.ck{background:#222}
+.cdot.cx{background:#f0f0f0;font-size:13px;color:#888;font-weight:800;border-color:#ddd}
+#cbar-lbl{font-size:7.5px;color:#bbb;writing-mode:vertical-rl;margin-top:5px;letter-spacing:1.5px;text-transform:uppercase}
+
+/* ══════════════════════ CARD ══════════════════════ */
+.card{width:90%;margin:0 auto;padding:14px;max-width:950px}
+.card-hd{background:var(--R);color:#fff;text-align:center;padding:20px 20px;
+  border-radius:10px 10px 0 0;font-size:20px;font-weight:800;letter-spacing:.6px}
+.card-body{background:#fff;border-radius:0 0 10px 10px;padding:20px 24px}
+
+/* ══════════════════════ RESET/RESTORE BUTTONS ══════════════════════ */
+.top-btns{display:flex;gap:10px;justify-content:flex-end;margin-bottom:14px}
+.btn-rst{border:none;padding:8px 18px;font-size:13px;font-weight:700;border-radius:7px;
+  cursor:pointer;transition:all .15s;letter-spacing:.2px}
+.btn-rst.reset{background:#ce232b;color:#fff}
+.btn-rst.reset:hover{background:#b01e24}
+.btn-rst.restore{background:#488351;color:#fff;display:none}
+.btn-rst.restore:hover{background:#3a6e43}
+.btn-rst.newform{background:#2d2d2d;color:#fff}
+.btn-rst.newform:hover{background:#1a1a1a}
+
+/* ══════════════════════ SECTION HEADERS ══════════════════════ */
+.sh{color:#fff;font-weight:700;font-size:13px;padding:9px 14px 15px;
+  margin:36px -24px 12px;-webkit-print-color-adjust:exact;border-radius:0}
+.sh.gr{background:var(--G)}.sh.dk{background:var(--D)}
+.subh{background:var(--G);color:#fff;font-weight:700;font-size:12px;
+  padding:7px 14px 13px;margin:24px -24px 12px;-webkit-print-color-adjust:exact}
+.sh-first{margin-top:8px}
+
+/* ══════════════════════ FORM FIELDS ══════════════════════ */
+.fg{margin:9px 0}
+.flabel{display:block;font-size:13.5px;color:#555;font-weight:600;margin-bottom:5px}
+
+/* DESKTOP: frow = flex row */
+.frow{display:flex;gap:14px;margin:9px 0}
+.frow .fg{flex:1;margin:0}
+
+input[type=text],input[type=number],input[type=date],input[type=time],
+select,textarea{
+  width:100%;padding:10px 13px;border:1.5px solid #ddd;border-radius:7px;
+  font-size:15px;font-family:inherit;color:#222;background:#fff;
+  -webkit-appearance:none;appearance:none;transition:border-color .2s,box-shadow .2s}
+input:focus,select:focus,textarea:focus{
+  outline:none;border-color:var(--G);box-shadow:0 0 0 3px rgba(72,131,81,.13)}
+textarea{resize:vertical;min-height:76px;font-size:14px}
+.cc{font-size:10px;color:#aaa;text-align:right;margin-top:2px}
+
+/* ══ Custom styled SELECT ══ */
+select{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9'%3E%3Cpath d='M1 1.5l6 6 6-6' stroke='%23488351' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 13px center;
+  padding-right:38px;cursor:pointer;font-weight:500}
+select:hover{border-color:var(--G);box-shadow:0 2px 8px rgba(72,131,81,.12)}
+select:focus{background-color:#f8fff9}
+select option{padding:10px;font-size:14px;font-weight:500;background:#fff;color:#222}
+/* select option states intentionally unstyled to avoid mobile OS override */
+
+/* °C suffix wrapper */
+.iu{position:relative}.iu input{padding-right:36px}
+.ul{position:absolute;right:12px;top:50%;transform:translateY(-50%);
+  font-size:13px;color:#888;pointer-events:none;font-weight:600}
+
+/* colored field states */
+.f-red{color:#ce232b!important;background:#fff3f3!important;border-color:#ce232b!important}
+.f-green{color:#488351!important;background:#f3fff3!important;border-color:#488351!important}
+
+/* ══════════════════════ BASIC INFO GRID ══════════════════════ */
+/* Desktop: specific 2-col pairs */
+.bi-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 16px}
+.bi-grid .fg{margin:0}
+.bi-solo{grid-column:1 / -1}
+/* Mobile overrides below */
+
+/* ══════════════════════ TIME PICKER ══════════════════════ */
+.time-wrap{position:relative}
+.time-wrap input[type=time]{cursor:pointer}
+/* Custom clock overlay */
+/* ── Time picker overlay ── */
+.clock-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.48);
+  z-index:5000;align-items:center;justify-content:center}
+.clock-overlay.open{display:flex}
+.clock-box{background:#fff;border-radius:16px;padding:22px 28px;min-width:280px;max-width:320px;
+  box-shadow:0 10px 40px rgba(0,0,0,.28);text-align:center;width:90%}
+.clock-title{font-size:12px;font-weight:700;color:var(--G);margin-bottom:14px;
+  text-transform:uppercase;letter-spacing:.6px}
+.clock-display{background:var(--G);color:#fff;border-radius:10px;padding:12px 16px;
+  font-size:38px;font-weight:800;letter-spacing:5px;margin-bottom:18px;
+  display:flex;align-items:center;justify-content:center;gap:2px;user-select:none}
+.clock-sep{opacity:.8}
+.clock-cols{display:flex;gap:16px;justify-content:center;margin-bottom:18px}
+.clock-col{display:flex;flex-direction:column;align-items:center;gap:6px}
+.clock-col .clbl{font-size:10px;font-weight:700;color:#888;letter-spacing:.5px}
+.clk-spin{display:flex;flex-direction:column;align-items:center;gap:4px}
+.clk-btn{width:52px;height:36px;border:1.5px solid var(--G);border-radius:8px;
+  background:#f8fff9;color:var(--G);font-size:20px;font-weight:700;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:all .12s;
+  -webkit-user-select:none;user-select:none}
+.clk-btn:hover{background:rgba(72,131,81,.15)}
+.clk-btn:active{background:rgba(72,131,81,.28);transform:scale(.93)}
+.clk-val{width:52px;height:44px;border:2px solid var(--G);border-radius:8px;
+  font-size:24px;font-weight:800;color:var(--G);text-align:center;
+  display:flex;align-items:center;justify-content:center;background:#fff}
+.clock-btns{display:flex;gap:10px;justify-content:flex-end}
+.clock-btn-act{border:none;padding:10px 22px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer}
+.clock-btn-act.cancel{background:#f0f0f0;color:#555}
+.clock-btn-act.ok{background:var(--G);color:#fff}
+
+/* ══════════════════════ IMAGE UPLOAD ══════════════════════ */
+.iup-wrap{margin-top:8px}
+.iup-preview{display:none;position:relative;margin-bottom:6px;overflow:visible}
+.iup-preview img{max-width:100%;max-height:200px;border-radius:8px;
+  border:1.5px solid var(--G);display:block}
+.iup-rm{position:absolute;top:-11px;right:-11px;background:rgba(206,35,43,.92);
+  color:#fff;border:none;border-radius:50%;width:26px;height:26px;font-size:14px;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:700}
+/* Single upload button - used on both mobile and desktop, 60% of original size */
+.iup-btns{display:flex;gap:6px}
+.iup-btn{display:inline-flex;align-items:center;gap:5px;
+  border:1.5px solid var(--G);border-radius:8px;padding:8px 14px;
+  background:#f8fff9;cursor:pointer;font-size:11px;color:var(--G);font-weight:700;
+  transition:all .15s;white-space:nowrap}
+.iup-btn:hover{background:rgba(72,131,81,.12)}
+
+
+/* ══════════════════════ GENERATE BUTTON ══════════════════════ */
+.btn-gen{display:block;width:100%;background:var(--G);color:#fff;border:none;
+  padding:17px;font-size:16px;font-weight:700;border-radius:10px;cursor:pointer;
+  margin-top:24px;letter-spacing:.3px;transition:background .15s}
+.btn-gen:hover{background:#3a6e43}
+.btn-gen:active{background:#2d5c38}
+
+/* ══════════════════════ CUSTOM OUTLET ══════════════════════ */
+#outlet-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);
+  z-index:7000;align-items:center;justify-content:center}
+#outlet-modal.open{display:flex}
+.om-box{background:#fff;border-radius:14px;padding:24px;width:90%;max-width:400px;
+  box-shadow:0 8px 30px rgba(0,0,0,.25)}
+.om-title{font-size:14px;font-weight:700;color:var(--G);margin-bottom:14px;
+  letter-spacing:.3px}
+.om-label{display:block;font-size:12px;color:#666;font-weight:600;margin-bottom:6px}
+.om-input{width:100%;padding:12px 14px;border:2px solid var(--G);border-radius:8px;
+  font-size:16px;font-family:inherit;color:#222;background:#fff;outline:none}
+.om-input:focus{box-shadow:0 0 0 3px rgba(72,131,81,.15)}
+.om-btns{display:flex;gap:10px;margin-top:16px;justify-content:flex-end}
+.om-btn{border:none;padding:10px 22px;border-radius:8px;font-size:14px;
+  font-weight:700;cursor:pointer;transition:all .15s}
+.om-btn.cancel{background:#f0f0f0;color:#555}
+.om-btn.cancel:hover{background:#e0e0e0}
+.om-btn.ok{background:var(--G);color:#fff}
+.om-btn.ok:hover{background:#3a6e43}
+
+/* ══════════════════════ CONFIRM MODAL ══════════════════════ */
+#confirm-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.52);
+  z-index:8000;align-items:center;justify-content:center}
+#confirm-modal.open{display:flex}
+.cfm-box{background:#fff;border-radius:16px;padding:26px 28px;width:90%;max-width:380px;
+  box-shadow:0 10px 40px rgba(0,0,0,.3);text-align:center}
+.cfm-icon{font-size:36px;margin-bottom:10px}
+.cfm-title{font-size:16px;font-weight:800;color:#222;margin-bottom:8px}
+.cfm-msg{font-size:13px;color:#666;line-height:1.5;margin-bottom:20px}
+.cfm-btns{display:flex;gap:10px;justify-content:center}
+.cfm-btn{border:none;padding:11px 26px;border-radius:9px;font-size:14px;
+  font-weight:700;cursor:pointer;transition:all .15s;min-width:110px}
+.cfm-btn.cancel{background:#f0f0f0;color:#555}
+.cfm-btn.cancel:hover{background:#e0e0e0}
+.cfm-btn.danger{background:#ce232b;color:#fff}
+.cfm-btn.danger:hover{background:#b01e24}
+
+/* ══════════════════════ TOAST ══════════════════════ */
+#toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);
+  background:rgba(30,30,30,.92);color:#fff;padding:11px 24px;border-radius:24px;
+  font-size:13px;font-weight:600;z-index:9000;opacity:0;transition:opacity .3s;
+  pointer-events:none;white-space:nowrap;max-width:90vw;text-align:center}
+#toast.show{opacity:1}
+#toast.warn{background:rgba(206,35,43,.92)}
+#toast.ok{background:rgba(72,131,81,.95)}
+
+/* ══════════════════════ RESPONSIVE ══════════════════════ */
+@media(max-width:640px){
+  .iup-wrap{margin-top:6px}
+  body{padding-bottom:30px}
+  .card{width:100%;padding:6px}
+  .card-body{padding:14px 14px}
+  .sh{margin-left:-14px;margin-right:-14px}
+  .subh{margin-left:-14px;margin-right:-14px}
+  /* Basic Info: single column on mobile, specific order via order property */
+  .bi-grid{grid-template-columns:1fr;gap:8px}
+  .bi-solo{grid-column:1}
+  /* Time: use native on mobile */
+  .clock-trigger-btn{display:none!important}
+  input[type=time].clock-input{display:block!important}
+  /* Desktop frow stays flex but single col on mobile */
+  .frow{flex-direction:column;gap:6px}
+  .frow .fg{margin:0}
+}
+@media(min-width:641px){
+  /* Desktop time: hide native input, show custom */
+  input[type=time].clock-input{display:none!important}
+}
+@media print{#cbar,.btn-gen,.top-btns,#toast,#confirm-modal,#outlet-modal,.clock-overlay,#scroll-top,#sticky-bar,#autosave{display:none!important}}
+#_print_overlay{display:none}
+body.printing-overlay>*:not(#_print_overlay){display:none!important}
+body.printing-overlay #_print_overlay{display:block!important}
+/* Reinforce overlay-print rules in @media print (mobile browsers) */
+@media print{
+  body.printing-overlay>*:not(#_print_overlay){display:none!important}
+  body.printing-overlay #_print_overlay{display:block!important}
+}
+
+/* ══════════════════════ SCROLL BUTTONS ══════════════════════ */
+.scroll-btn{position:fixed;right:14px;z-index:1900;
+  width:40px;height:40px;border-radius:50%;color:#fff;border:none;
+  font-size:18px;font-weight:700;cursor:pointer;display:none;
+  align-items:center;justify-content:center;
+  box-shadow:0 3px 12px rgba(0,0,0,.25);transition:background .15s,transform .1s}
+.scroll-btn:active{transform:scale(.9)}
+#scroll-top{background:var(--G);bottom:140px}
+#scroll-top:hover{background:#3a6e43}
+#scroll-bottom{background:var(--D);bottom:88px}
+#scroll-bottom:hover{background:#3a3a3a}
+.scroll-btn.visible{display:flex}
+/* Mobile: always show both buttons above sticky bar */
+@media(max-width:640px){
+  #scroll-top{bottom:132px;display:flex!important}
+  #scroll-bottom{bottom:80px;display:flex!important}
+}
+
+/* ══════════════════════ AUTOSAVE INDICATOR ══════════════════════ */
+#autosave{position:fixed;top:10px;left:50%;transform:translateX(-50%);
+  background:rgba(72,131,81,.9);color:#fff;font-size:11px;font-weight:700;
+  padding:4px 14px;border-radius:20px;z-index:9500;opacity:0;
+  transition:opacity .3s;pointer-events:none;white-space:nowrap}
+#autosave.show{opacity:1}
+
+/* ══════════════════════ STICKY PDF BAR (mobile) ══════════════════════ */
+#sticky-bar{display:none;position:fixed;bottom:0;left:0;right:0;z-index:1800;
+  background:rgba(255,255,255,.97);padding:10px 16px;
+  box-shadow:0 -2px 14px rgba(0,0,0,.13)}
+#sticky-bar .btn-gen{margin-top:0;font-size:15px;padding:14px}
+@media(max-width:640px){
+  #sticky-bar{display:block}
+  .btn-gen.main-gen{display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════ COLOR BAR ═══════════════════ -->
+<div id="cbar">
+  <span id="cbar-lbl">Color</span>
+  <div class="cdot cr" onclick="setColor('red')" title="Red"></div>
+  <div class="cdot cg" onclick="setColor('green')" title="Green"></div>
+  <div class="cdot ck" onclick="setColor('black')" title="Black"></div>
+  <div class="cdot cx" onclick="setColor(null)" title="Clear">✕</div>
+</div>
+
+<!-- ═══════════════════ CLOCK OVERLAY ═══════════════════ -->
+<div class="clock-overlay" id="clockOverlay">
+  <div class="clock-box">
+    <div class="clock-title" id="clockLabel">Set Time</div>
+    <div class="clock-display">
+      <span id="clkHDisp">08</span><span class="clock-sep">:</span><span id="clkMDisp">00</span>
+    </div>
+    <div class="clock-cols">
+      <div class="clock-col">
+        <div class="clbl">Hour</div>
+        <div class="clk-spin">
+          <div class="clk-btn" onmousedown="startSpin('h',1)" ontouchstart="startSpin('h',1)">&#8679;</div>
+          <div class="clk-val" id="clkHVal">08</div>
+          <div class="clk-btn" onmousedown="startSpin('h',-1)" ontouchstart="startSpin('h',-1)">&#8681;</div>
+        </div>
+      </div>
+      <div class="clock-col">
+        <div class="clbl">Min</div>
+        <div class="clk-spin">
+          <div class="clk-btn" onmousedown="startSpin('m',5)" ontouchstart="startSpin('m',5)">&#8679;</div>
+          <div class="clk-val" id="clkMVal">00</div>
+          <div class="clk-btn" onmousedown="startSpin('m',-5)" ontouchstart="startSpin('m',-5)">&#8681;</div>
+        </div>
+      </div>
+    </div>
+    <div class="clock-btns">
+      <button class="clock-btn-act cancel" onclick="closeClock()">Cancel</button>
+      <button class="clock-btn-act ok" onclick="confirmClock()">OK</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ CUSTOM OUTLET MODAL ═══════════════════ -->
+<div id="outlet-modal">
+  <div class="om-box">
+    <div class="om-title">🍕 Custom Outlet</div>
+    <label class="om-label" for="om-input">Enter outlet name</label>
+    <input type="text" class="om-input" id="om-input"
+      placeholder="e.g. Nugegoda, Maharagama..."
+      onkeydown="if(event.key==='Enter') confirmOutletModal()">
+    <div class="om-btns">
+      <button class="om-btn cancel" onclick="cancelOutletModal()">Cancel</button>
+      <button class="om-btn ok" onclick="confirmOutletModal()">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ CONFIRM MODAL ═══════════════════ -->
+<div id="confirm-modal">
+  <div class="cfm-box">
+    <div class="cfm-icon">⚠️</div>
+    <div class="cfm-title">Reset Form?</div>
+    <div class="cfm-msg">This will clear all fields for the current outlet.<br>Your data will be saved and can be <strong>Restored</strong>.</div>
+    <div class="cfm-btns">
+      <button class="cfm-btn cancel" onclick="closeConfirm()">Cancel</button>
+      <button class="cfm-btn danger" onclick="confirmAction()">Yes, Reset</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ TOAST ═══════════════════ -->
+<div id="toast"></div>
+<div id="autosave">✓ Saved</div>
+<button id="scroll-top" class="scroll-btn" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+<button id="scroll-bottom" class="scroll-btn" onclick="window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'})" title="Go to bottom">↓</button>
+
+<div class="card">
+  <div class="card-hd">🍕 TRAINER VISIT REPORT</div>
+  <div class="card-body">
+
+    <!-- RESET / RESTORE -->
+    <div class="top-btns">
+      <button class="btn-rst restore" id="btnRestore" onclick="restoreForm()">↩ Restore</button>
+      <button class="btn-rst reset" onclick="resetForm()">✕ Reset</button>
+      <button class="btn-rst newform" onclick="newForm()">📋 New form</button>
+    </div>
+
+    <!-- ── Visit Information ── -->
+    <div class="sh gr sh-first">🍕 Visit Information</div>
+    <div class="frow">
+      <div class="fg">
+        <label class="flabel">Outlet</label>
+        <select id="f_outlet" data-key="outlet" onchange="handleOutletChange()">
+          <option>Union Place</option><option>Kolonnawa</option>
+          <option>Mattakkuliya</option><option>CCC</option>
+          <option>Kotahena</option><option>Borella</option>
+          <option>Shangri-La</option><option>Dematagoda</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label class="flabel">Date</label>
+        <input type="date" id="f_date_" data-key="date_">
+      </div>
+    </div>
+    <div class="frow">
+      <div class="fg">
+        <label class="flabel">Trainer</label>
+        <input type="text" id="f_trainer" data-key="trainer" value="Thushara">
+      </div>
+      <div class="fg">
+        <label class="flabel">MTM</label>
+        <input type="text" id="f_mtm" tabindex="10" data-key="mtm" placeholder="MTM name">
+      </div>
+    </div>
+    <div class="frow">
+      <div class="fg">
+        <label class="flabel">Arrival Time</label>
+        <div class="time-wrap">
+          <input type="time" class="clock-input" id="f_arr" data-key="arr">
+          <input type="text" class="clock-trigger-btn" id="f_arr_display" readonly
+            placeholder="--:--" onclick="openClock('arr')"
+            style="cursor:pointer;background:#fff">
+        </div>
+      </div>
+      <div class="fg">
+        <label class="flabel">Departure Time</label>
+        <div class="time-wrap">
+          <input type="time" class="clock-input" id="f_dep" data-key="dep">
+          <input type="text" class="clock-trigger-btn" id="f_dep_display" readonly
+            placeholder="--:--" onclick="openClock('dep')"
+            style="cursor:pointer;background:#fff">
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Basic Information ── -->
+    <div class="sh gr">🍕 Basic Information</div>
+
+    <!-- Desktop grid: pairs as specified. Mobile: single col with order -->
+    <div class="bi-grid">
+      <!-- Row 1: Latest ACE, GES TB -->
+      <div class="fg" style="order:1">
+        <label class="flabel">Latest ACE</label>
+        <select id="f_ace" data-key="ace">
+          <option>At Standard</option><option>Marginal</option><option>Underperforming</option>
+        </select>
+      </div>
+      <div class="fg" style="order:5">
+        <label class="flabel">GES TB</label>
+        <input type="number" inputmode="decimal" id="f_gesTB" tabindex="14" data-key="gesTB" step="0.01" placeholder="0.00">
+      </div>
+      <!-- Row 2: Latest TMTS, GES Derived -->
+      <div class="fg" style="order:2">
+        <label class="flabel">Latest TMTS</label>
+        <input type="number" inputmode="decimal" id="f_tmts" tabindex="11" data-key="tmts" step="0.01" placeholder="0">
+      </div>
+      <div class="fg" style="order:6">
+        <label class="flabel">GES Derived</label>
+        <input type="number" inputmode="decimal" id="f_gesDer" tabindex="15" data-key="gesDer" step="0.01" placeholder="0.00">
+      </div>
+      <!-- Row 3: SRI, GES B2B -->
+      <div class="fg" style="order:3">
+        <label class="flabel">SRI</label>
+        <input type="number" inputmode="decimal" id="f_sri" tabindex="12" data-key="sri" step="0.01" placeholder="0">
+      </div>
+      <div class="fg" style="order:7">
+        <label class="flabel">GES B2B</label>
+        <input type="number" inputmode="decimal" id="f_gesB2B" tabindex="16" data-key="gesB2B" step="0.01" placeholder="0.00">
+      </div>
+      <!-- Row 4: IDP, No. of GES -->
+      <div class="fg" style="order:4">
+        <label class="flabel">IDP</label>
+        <input type="number" inputmode="decimal" id="f_idp" tabindex="13" data-key="idp" step="0.01" placeholder="0.00">
+      </div>
+      <div class="fg" style="order:8">
+        <label class="flabel">No. of GES</label>
+        <input type="number" inputmode="numeric" id="f_noGES" tabindex="17" data-key="noGES" step="1" placeholder="0">
+      </div>
+      <!-- Row 5: No. BTs alone -->
+      <div class="fg bi-solo" style="order:9">
+        <label class="flabel">No. BTs</label>
+        <input type="number" inputmode="numeric" id="f_noBTs" tabindex="18" data-key="noBTs" step="1" placeholder="0" style="max-width:220px">
+      </div>
+      <!-- Row 6: RGM, RGM DC -->
+      <div class="fg" style="order:10">
+        <label class="flabel">RGM</label>
+        <input type="text" id="f_rgm" tabindex="19" data-key="rgm" placeholder="RGM name" oninput="updateMOD()">
+      </div>
+      <div class="fg" style="order:11">
+        <label class="flabel">RGM DC</label>
+        <select id="f_rgmDC" data-key="rgmDC">
+          <option selected>LAR 2</option><option>LAR 1</option><option>LAS</option>
+        </select>
+      </div>
+      <!-- Row 7: ARGM, ARGM DC -->
+      <div class="fg" style="order:12">
+        <label class="flabel">ARGM</label>
+        <input type="text" id="f_argm" tabindex="20" data-key="argm" placeholder="ARGM name" oninput="updateMOD()">
+      </div>
+      <div class="fg" style="order:13">
+        <label class="flabel">ARGM DC</label>
+        <select id="f_argmDC" data-key="argmDC">
+          <option>LAR 2</option><option selected>LAR 1</option><option>LAS</option>
+        </select>
+      </div>
+      <!-- Row 8: SM, SM DC -->
+      <div class="fg" style="order:14">
+        <label class="flabel">SM</label>
+        <input type="text" id="f_sm" tabindex="21" data-key="sm" placeholder="SM name" oninput="updateMOD()">
+      </div>
+      <div class="fg" style="order:15">
+        <label class="flabel">SM DC</label>
+        <select id="f_smDC" data-key="smDC">
+          <option>LAR 2</option><option>LAR 1</option><option selected>LAS</option>
+        </select>
+      </div>
+      <!-- Row 9: MOD (dynamic), 5 Star Rating YTD -->
+      <div class="fg" style="order:16">
+        <label class="flabel">MOD</label>
+        <select id="f_mod" data-key="mod">
+          <option value="">-- Select MOD --</option>
+        </select>
+      </div>
+      <div class="fg" style="order:17">
+        <label class="flabel">5 Star Rating YTD</label>
+        <input type="number" inputmode="decimal" id="f_starYTD" tabindex="22" data-key="starYTD" step="0.01" placeholder="0.00">
+      </div>
+    </div><!-- /bi-grid -->
+
+    <!-- ── Grooming Opportunities ── -->
+    <div class="sh gr">🍕 Grooming Opportunities</div>
+    <div class="fg">
+      <label class="flabel">Comments</label>
+      <textarea id="f_groomComm" tabindex="23" data-key="groomComm" maxlength="300" rows="3" placeholder="Enter grooming comments..."></textarea>
+      <div class="cc"><span id="cc_groomComm">0</span>/300</div>
+    </div>
+    <div class="iup-wrap" id="iw_groom">IMGBLOCK_groom</div>
+
+    <!-- ── Back of House ── -->
+    <div class="sh dk">🍕 Back of House</div>
+
+    <!-- Hand Washing Sink -->
+    <div class="subh">Hand Washing Sink</div>
+    <div class="fg">
+      <label class="flabel">Hand Washing Sink good working &amp; well arranged</label>
+      <select id="f_hwSink" data-key="hwSink"><option>YES</option><option>NO</option></select>
+    </div>
+    <div class="fg"><label class="flabel">Comments</label>
+      <textarea id="f_hwComm" tabindex="24" data-key="hwComm" maxlength="300" rows="2" placeholder="Comments..."></textarea>
+      <div class="cc"><span id="cc_hwComm">0</span>/300</div>
+    </div>
+    <div class="iup-wrap" id="iw_hw">IMGBLOCK_hw</div>
+
+    <!-- Dough Area -->
+    <div class="subh">Dough Area</div>
+    <div class="fg">
+      <label class="flabel">Is the Dough Book Updated</label>
+      <select id="f_doughBook" data-key="doughBook"><option>YES</option><option>NO</option></select>
+    </div>
+    <div class="fg">
+      <label class="flabel">Is Dough Preparation Standard</label>
+      <select id="f_doughStd" data-key="doughStd"><option>YES</option><option>NO</option></select>
+    </div>
+    <div class="fg"><label class="flabel">Comments on Dough Book</label>
+      <textarea id="f_doughC1" tabindex="25" data-key="doughC1" maxlength="300" rows="2" placeholder="Comments..."></textarea>
+      <div class="cc"><span id="cc_doughC1">0</span>/300</div>
+    </div>
+    <div class="iup-wrap" id="iw_doughC1">IMGBLOCK_doughC1</div>
+    <div class="fg" style="margin-top:10px"><label class="flabel">Comments on Dough Area Opportunities</label>
+      <textarea id="f_doughC2" tabindex="26" data-key="doughC2" maxlength="300" rows="2" placeholder="Comments..."></textarea>
+      <div class="cc"><span id="cc_doughC2">0</span>/300</div>
+    </div>
+    <div class="iup-wrap" id="iw_doughC2">IMGBLOCK_doughC2</div>
+
+    <!-- Cool Room -->
+    <div class="subh">Cool Room</div>
+    <div class="fg">
+      <label class="flabel">Cool Room Temperature</label>
+      <select id="f_coolTemp" data-key="coolTemp"><option>YES</option><option>NO</option><option>N/A</option></select>
+    </div>
+    <div class="fg">
+      <label class="flabel">MRD Labelling</label>
+      <select id="f_coolMRD" data-key="coolMRD"><option>YES</option><option>NO</option></select>
+    </div>
+    <div class="fg">
+      <label class="flabel">Sufficient Backup Available</label>
+      <select id="f_coolBack" data-key="coolBack"><option>YES</option><option>NO</option></select>
+    </div>
+    <div class="fg">
+      <label class="flabel">Quality of the Toppings</label>
+      <select id="f_coolQual" data-key="coolQual"><option>YES</option><option>NO</option></select>
+    </div>
+    <div class="fg"><label class="flabel">Comments</label>
+      <textarea id="f_coolComm" tabindex="27" data-key="coolComm" maxlength="300" rows="2" placeholder="Comments..."></textarea>
+      <div class="cc"><span id="cc_coolComm">0</span>/300</div>
+    </div>
+    <div class="iup-wrap" id="iw_cool">IMGBLOCK_cool</div>
+
+    <!-- Freezer Room -->
+    <div class="subh">Freezer Room</div>
+    <div class="fg"><label class="flabel">Comments</label>
+      <textarea id="f_freezComm" tabindex="28" data-key="freezComm" maxlength="300" rows="2" placeholder="Comments..."></textarea>
+      <div class="cc"><span id="cc_freezComm">0</span>/300</div>
+    </div>
+    <div class="iup-wrap" id="iw_freez">IMGBLOCK_freez</div>
+
+    <!-- Chest Freezers -->
+    <div class="subh">Chest Freezers</div>
+    <div class="fg"><label class="flabel">Comments</label>
+      <textarea id="f_chestComm" tabindex="29" data-key="chestComm" maxlength="300" rows="2" placeholder="Comments..."></textarea>
+      <div class="cc"><span id="cc_chestComm">0</span>/300</div>
+    </div>
+    <div class="iup-wrap" id="iw_chest">IMGBLOCK_chest</div>
+
+    <!-- Make Table -->
+    <div class="subh">Make Table</div>
+    <div class="fg">
+      <label class="flabel">MRD Labelling</label>
+      <select id="f_mtMRD" data-key="mtMRD"><option>YES</option><option>NO</option></select>
+    </div>
+    <div class="fg">
+      <label class="flabel">MT Temperature</label>
+      <div class="iu">
+        <input type="number" inputmode="decimal" id="f_mtTemp" tabindex="30" data-key="mtTemp" step="0.1" placeholder="0.0">
+        <span class="ul">°C</span>
+      </div>
+    </div>
+    <div class="fg">
+      <label class="flabel">MT Layout</label>
+      <select id="f_mtLayout" data-key="mtLayout"><option>YES</option><option>NO</option></select>
+    </div>
+    <div class="fg">
+      <label class="flabel">Follow the Correct Refilling</label>
+      <select id="f_mtRefill" data-key="mtRefill"><option>YES</option><option>NO</option></select>
+    </div>
+    <div class="fg">
+      <label class="flabel">Sufficient Backup Available</label>
+      <select id="f_mtBack" data-key="mtBack"><option>YES</option><option>NO</option></select>
+    </div>
+    <div class="fg">
+      <label class="flabel">Quality of the Toppings</label>
+      <select id="f_mtQual" data-key="mtQual"><option>YES</option><option>NO</option></select>
+    </div>
+    <div class="fg">
+      <label class="flabel">Follow the Correct SOP</label>
+      <select id="f_mtSOP" data-key="mtSOP"><option>YES</option><option>NO</option></select>
+    </div>
+    <div class="fg">
+      <label class="flabel">Cleanliness of Equipment</label>
+      <select id="f_mtClean" data-key="mtClean">
+        <option>Very Good</option><option selected>Good</option><option>Bad</option><option>Very Bad</option>
+      </select>
+    </div>
+    <div class="fg"><label class="flabel">Comments</label>
+      <textarea id="f_mtComm" tabindex="31" data-key="mtComm" maxlength="300" rows="2" placeholder="Comments..."></textarea>
+      <div class="cc"><span id="cc_mtComm">0</span>/300</div>
+    </div>
+    <div class="iup-wrap" id="iw_mt">IMGBLOCK_mt</div>
+
+    <!-- Pasta Table -->
+    <div class="subh">Pasta Table</div>
+    <div class="fg">
+      <label class="flabel">MRD Labelling</label>
+      <select id="f_ptMRD" data-key="ptMRD"><option>YES</option><option>NO</option></select>
+    </div>
+    <div class="fg">
+      <label class="flabel">PT Temperature</label>
+      <div class="iu">
+        <input type="number" inputmode="decimal" id="f_ptTemp" tabindex="32" data-key="ptTemp" step="0.1" placeholder="0.0">
+        <span class="ul">°C</span>
+      </div>
+    </div>
+    <div class="fg">
+      <label class="flabel">Follow the Correct Refilling</label>
+      <select id="f_ptRefill" data-key="ptRefill"><option>YES</option><option>NO</option></select>
+    </div>
+    <div class="fg">
+      <label class="flabel">Quality of the Toppings</label>
+      <select id="f_ptQual" data-key="ptQual"><option>YES</option><option>NO</option></select>
+    </div>
+    <div class="fg">
+      <label class="flabel">Follow the Correct SOP</label>
+      <select id="f_ptSOP" data-key="ptSOP"><option>YES</option><option>NO</option></select>
+    </div>
+    <div class="fg">
+      <label class="flabel">Cleanliness of Equipment</label>
+      <select id="f_ptClean" data-key="ptClean">
+        <option>Very Good</option><option selected>Good</option><option>Bad</option><option>Very Bad</option>
+      </select>
+    </div>
+    <div class="fg"><label class="flabel">Comments</label>
+      <textarea id="f_ptComm" tabindex="33" data-key="ptComm" maxlength="300" rows="2" placeholder="Comments..."></textarea>
+      <div class="cc"><span id="cc_ptComm">0</span>/300</div>
+    </div>
+    <div class="iup-wrap" id="iw_pt">IMGBLOCK_pt</div>
+
+    <!-- Cut Table -->
+    <div class="subh">Cut Table</div>
+    <div class="fg">
+      <label class="flabel">Cleanliness of Equipment</label>
+      <select id="f_ctClean" data-key="ctClean">
+        <option>Very Good</option><option selected>Good</option><option>Bad</option><option>Very Bad</option>
+      </select>
+    </div>
+    <div class="fg">
+      <label class="flabel">All Required Garnishes &amp; Packing Materials Available</label>
+      <select id="f_ctGarnish" data-key="ctGarnish"><option>YES</option><option>NO</option></select>
+    </div>
+    <div class="fg"><label class="flabel">Comments</label>
+      <textarea id="f_ctComm" tabindex="34" data-key="ctComm" maxlength="300" rows="2" placeholder="Comments..."></textarea>
+      <div class="cc"><span id="cc_ctComm">0</span>/300</div>
+    </div>
+    <div class="iup-wrap" id="iw_ct">IMGBLOCK_ct</div>
+
+    <!-- BOH Preparation Area -->
+    <div class="subh">Back of House Preparation Area</div>
+    <div class="fg"><label class="flabel">BOH Area and Equipment Well Cleaned and Maintained</label>
+      <select id="f_bohClean" data-key="bohClean"><option>YES</option><option>NO</option></select></div>
+    <div class="fg"><label class="flabel">All Required Vegetables Washed &amp; Sanitized before Preparation</label>
+      <select id="f_bohVeg" data-key="bohVeg"><option>YES</option><option>NO</option></select></div>
+    <div class="fg"><label class="flabel">Pasta Boiling Process Standard</label>
+      <select id="f_bohPasta" data-key="bohPasta"><option>YES</option><option>NO</option></select></div>
+    <div class="fg"><label class="flabel">Rice Preparation Process Standard</label>
+      <select id="f_bohRice" data-key="bohRice"><option>YES</option><option>NO</option></select></div>
+    <div class="fg"><label class="flabel">ICE Cube Machine &amp; Relevant Equipment Standard</label>
+      <select id="f_bohIce" data-key="bohIce"><option>YES</option><option>NO</option></select></div>
+    <div class="fg"><label class="flabel">Follow the Correct 3 Sink Process &amp; Well Maintained</label>
+      <select id="f_bohSink" data-key="bohSink"><option>YES</option><option>NO</option></select></div>
+    <div class="fg"><label class="flabel">Melts Dough Process</label>
+      <select id="f_bohMelts" data-key="bohMelts"><option>YES</option><option>NO</option></select></div>
+    <div class="fg"><label class="flabel">Thawing Book &amp; Thawing</label>
+      <select id="f_bohThaw" data-key="bohThaw"><option>YES</option><option>NO</option></select></div>
+
+    <!-- Sauce Preparation -->
+    <div class="subh">Sauce Preparation</div>
+    <div class="fg"><label class="flabel">Pan Sauce Preparation</label>
+      <select id="f_panS" data-key="panS"><option>YES</option><option>NO</option></select></div>
+    <div class="fg"><label class="flabel">White Sauce Preparation</label>
+      <select id="f_whiteS" data-key="whiteS"><option>YES</option><option>NO</option></select></div>
+    <div class="fg"><label class="flabel">Arrabbiata Mix</label>
+      <select id="f_arrMix" data-key="arrMix"><option>YES</option><option>NO</option></select></div>
+    <div class="fg"><label class="flabel">Arrabbiata Sauce Preparation</label>
+      <select id="f_arabS" data-key="arabS"><option>YES</option><option>NO</option></select></div>
+    <div class="fg"><label class="flabel">Thousand Island Sauce Preparation</label>
+      <select id="f_tiS" data-key="tiS"><option>YES</option><option>NO</option></select></div>
+    <div class="fg"><label class="flabel">Kochchi Sauce Preparation</label>
+      <select id="f_kochS" data-key="kochS"><option>YES</option><option>NO</option></select></div>
+    <div class="fg"><label class="flabel">Mayo Sauce Preparation</label>
+      <select id="f_mayoS" data-key="mayoS"><option>YES</option><option>NO</option></select></div>
+    <div class="fg"><label class="flabel">Comments on BOH Opportunities</label>
+      <textarea id="f_bohComm" tabindex="35" data-key="bohComm" maxlength="300" rows="2" placeholder="Comments..."></textarea>
+      <div class="cc"><span id="cc_bohComm">0</span>/300</div>
+    </div>
+    <div class="iup-wrap" id="iw_boh">IMGBLOCK_boh</div>
+
+    <!-- Oven -->
+    <div class="subh">Back of House Oven</div>
+    <div class="frow">
+      <div class="fg"><label class="flabel">Name of Oven 1</label>
+        <input type="text" id="f_oven1" data-key="oven1" placeholder="Oven 1 name"></div>
+      <div class="fg"><label class="flabel">Name of Oven 2</label>
+        <input type="text" id="f_oven2" data-key="oven2" placeholder="Oven 2 name"></div>
+    </div>
+    <div class="frow">
+      <div class="fg"><label class="flabel">Oven Temperature Standard</label>
+        <select id="f_ovenTemp" data-key="ovenTemp"><option>YES</option><option>NO</option></select></div>
+      <div class="fg"><label class="flabel">Oven Belt Speed Standard</label>
+        <select id="f_ovenBelt" data-key="ovenBelt"><option>YES</option><option>NO</option></select></div>
+    </div>
+
+    <!-- BOH TM Knowledge -->
+    <div class="subh">Back of House TM Knowledge or Skill Check</div>
+    <div class="frow">
+      <div class="fg"><label class="flabel">TM Name</label>
+        <input type="text" id="f_bohTmName" tabindex="36" data-key="bohTmName" placeholder="TM name"></div>
+      <div class="fg"><label class="flabel">Question or Skill Check Area</label>
+        <input type="text" id="f_bohTmQ" tabindex="37" data-key="bohTmQ" placeholder="Question / skill area"></div>
+    </div>
+
+    <!-- ── Front of House ── -->
+    <div class="sh dk">🍕 Front of House</div>
+    <div class="fg"><label class="flabel">FOH Area Well Cleaned &amp; Well Maintained</label>
+      <select id="f_fohClean" data-key="fohClean"><option>YES</option><option>NO</option></select></div>
+    <div class="fg"><label class="flabel">All Cutlery Setups are Arranged Properly</label>
+      <select id="f_fohCut" data-key="fohCut"><option>YES</option><option>NO</option></select></div>
+    <div class="fg"><label class="flabel">All Menus Cleaned &amp; Displayed</label>
+      <select id="f_fohMenu" data-key="fohMenu"><option>YES</option><option>NO</option></select></div>
+    <div class="fg"><label class="flabel">Customer Wash Room Cleaned &amp; Maintained</label>
+      <select id="f_fohWash" data-key="fohWash"><option>YES</option><option>NO</option></select></div>
+    <div class="fg"><label class="flabel">All Electrical Equipment Cleaned and Working</label>
+      <select id="f_fohElec" data-key="fohElec"><option>YES</option><option>NO</option></select></div>
+    <div class="fg"><label class="flabel">BT Book Update</label>
+      <select id="f_fohBT" data-key="fohBT"><option>YES</option><option>NO</option></select></div>
+    <div class="fg"><label class="flabel">MOC / 5 Smile Follow</label>
+      <select id="f_fohMOC" data-key="fohMOC"><option>YES</option><option>NO</option></select></div>
+    <div class="fg"><label class="flabel">Comments on FOH Opportunities</label>
+      <textarea id="f_fohComm" tabindex="38" data-key="fohComm" maxlength="300" rows="2" placeholder="Comments..."></textarea>
+      <div class="cc"><span id="cc_fohComm">0</span>/300</div>
+    </div>
+    <div class="iup-wrap" id="iw_foh">IMGBLOCK_foh</div>
+
+    <div class="subh">Front of House TM Knowledge or Skill Check</div>
+    <div class="frow">
+      <div class="fg"><label class="flabel">TM Name</label>
+        <input type="text" id="f_fohTmName" tabindex="39" data-key="fohTmName" placeholder="TM name"></div>
+      <div class="fg"><label class="flabel">Question or Skill Check Area</label>
+        <input type="text" id="f_fohTmQ" tabindex="40" data-key="fohTmQ" placeholder="Question / skill area"></div>
+    </div>
+
+    <!-- ── Rider ── -->
+    <div class="sh gr">🍕 Rider</div>
+    <div class="fg"><label class="flabel">Rider Checklist Filled and Completed</label>
+      <select id="f_riderCL" data-key="riderCL"><option>YES</option><option>NO</option></select></div>
+    <div class="fg"><label class="flabel">Delivery Pouches Cleaned and Well Maintained</label>
+      <select id="f_riderPch" data-key="riderPch"><option>YES</option><option>NO</option></select></div>
+    <div class="fg"><label class="flabel">Delivery Bikes Cleaned and Well Maintained</label>
+      <select id="f_riderBike" data-key="riderBike"><option>YES</option><option>NO</option></select></div>
+    <div class="fg"><label class="flabel">Comments on Rider Opportunities</label>
+      <textarea id="f_riderComm" tabindex="41" data-key="riderComm" maxlength="300" rows="2" placeholder="Comments..."></textarea>
+      <div class="cc"><span id="cc_riderComm">0</span>/300</div>
+    </div>
+    <div class="iup-wrap" id="iw_rider">IMGBLOCK_rider</div>
+
+    <!-- ── HU Training ── -->
+    <div class="sh gr">🍕 HU Training Completion</div>
+    <div class="frow">
+      <div class="fg"><label class="flabel">FOH</label>
+        <input type="number" inputmode="decimal" id="f_huFOH" tabindex="42" data-key="huFOH" step="0.01" placeholder="0"></div>
+      <div class="fg"><label class="flabel">Rider</label>
+        <input type="number" inputmode="decimal" id="f_huRider" tabindex="43" data-key="huRider" step="0.01" placeholder="0"></div>
+    </div>
+    <div class="frow">
+      <div class="fg"><label class="flabel">BOH</label>
+        <input type="number" inputmode="decimal" id="f_huBOH" tabindex="44" data-key="huBOH" step="0.01" placeholder="0"></div>
+      <div class="fg"><label class="flabel">Overall</label>
+        <input type="number" inputmode="decimal" id="f_huOverall" tabindex="45" data-key="huOverall" step="0.01" placeholder="0"></div>
+    </div>
+
+    <!-- ── Class Room Session ── -->
+    <div class="sh gr">🍕 Class Room Session or Observation Area</div>
+    <div class="fg" style="margin-bottom:75px">
+      <label class="flabel">Comments</label>
+      <textarea id="f_crText" data-key="crText" tabindex="46" maxlength="500" rows="4"
+        placeholder="Enter class room session or observation notes..."></textarea>
+      <div class="cc"><span id="cc_crText">0</span>/500</div>
+    </div>
+
+    <button class="btn-gen main-gen" onclick="generate()">🖨️ Save as PDF</button>
+  </div><!-- card-body -->
+</div><!-- card -->
+
+<!-- sticky PDF bar for mobile -->
+<div id="sticky-bar">
+  <button class="btn-gen" onclick="generate()">🖨️ Save as PDF</button>
+</div>
+
+<script>
+/* ══════════════════════════════════════════════════════
+   BUILD IMAGE BLOCKS
+══════════════════════════════════════════════════════ */
+var IMG_KEYS = ['groom','hw','doughC1','doughC2','cool','freez','chest',
+                'mt','pt','ct','boh','foh','rider'];
+
+(function initImageBlocks(){
+  IMG_KEYS.forEach(function(k){
+    var wrap = document.getElementById('iw_'+k);
+    if (!wrap) return;
+    // Each block gets its own hidden file input - accept image/* lets OS choose gallery/camera
+    wrap.innerHTML =
+      '<div class="iup-preview" id="iprev_'+k+'">' +
+        '<img id="iimg_'+k+'" src="">' +
+        '<button class="iup-rm" onclick="removeImg(\''+k+'\')">✕</button>' +
+      '</div>' +
+      '<div class="iup-btns">' +
+        '<label class="iup-btn" for="ifile_'+k+'">📷 Add Photo</label>' +
+        '<input type="file" id="ifile_'+k+'" accept="image/*" style="display:none"' +
+          ' onchange="onFilePick(this,\''+k+'\')">' +
+      '</div>';
+  });
+})();
+
+/* ══════════════════════════════════════════════════════
+   STATE
+══════════════════════════════════════════════════════ */
+var fieldColors  = {};
+var activeKey    = null;
+var images       = {};
+var savedSnapshot= null;
+
+/* ══════════════════════════════════════════════════════
+   TOAST
+══════════════════════════════════════════════════════ */
+var toastTimer;
+function showToast(msg, type){
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'show ' + (type||'');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ t.className = ''; }, 2600);
+}
+
+/* ══════════════════════════════════════════════════════
+   COLOR BAR
+══════════════════════════════════════════════════════ */
+function setColor(c){
+  if (!activeKey) { showToast('Tap a field first, then pick a colour.','warn'); return; }
+  fieldColors[activeKey] = c;
+  applyFieldStyle(activeKey);
+  document.querySelectorAll('.cdot').forEach(function(d){ d.classList.remove('active'); });
+  if (c){
+    var cls = c==='red'?'.cr':(c==='green'?'.cg':'.ck');
+    var dot = document.querySelector('#cbar '+cls);
+    if (dot) dot.classList.add('active');
+  }
+}
+function applyFieldStyle(key){
+  var el = document.getElementById('f_'+key);
+  if (!el) return;
+  var c = fieldColors[key];
+  el.classList.remove('f-red','f-green');
+  el.style.color = '';
+  if (c === 'red')   el.classList.add('f-red');
+  if (c === 'green') el.classList.add('f-green');
+  if (c === 'black') el.style.color = '#222';
+}
+document.addEventListener('focusin', function(e){
+  var el = e.target;
+  if (!el.dataset || !el.dataset.key) return;
+  activeKey = el.dataset.key;
+  document.querySelectorAll('.cdot').forEach(function(d){ d.classList.remove('active'); });
+  var c = fieldColors[activeKey];
+  if (c){
+    var cls = c==='red'?'.cr':(c==='green'?'.cg':'.ck');
+    var dot = document.querySelector('#cbar '+cls);
+    if (dot) dot.classList.add('active');
+  }
+});
+
+/* Clear user-applied color when field value changes */
+document.addEventListener('change', function(e){
+  var el = e.target;
+  if (!el.dataset || !el.dataset.key) return;
+  var key = el.dataset.key;
+  if (fieldColors[key]) {
+    delete fieldColors[key];
+    applyFieldStyle(key);
+    // Also clear the color dots if this is the active field
+    if (activeKey === key) {
+      document.querySelectorAll('.cdot').forEach(function(d){ d.classList.remove('active'); });
+    }
+  }
+});
+
+/* ══════════════════════════════════════════════════════
+   CHAR COUNTERS
+══════════════════════════════════════════════════════ */
+document.querySelectorAll('textarea[maxlength]').forEach(function(ta){
+  var key = ta.dataset.key;
+  var cc  = document.getElementById('cc_'+key);
+  if (!cc) return;
+  ta.addEventListener('input', function(){ cc.textContent = ta.value.length; });
+});
+
+/* ══════════════════════════════════════════════════════
+   MOD DROPDOWN - dynamic from RGM/ARGM/SM
+══════════════════════════════════════════════════════ */
+function updateMOD(){
+  var rgm  = ((document.getElementById('f_rgm')  || {}).value  || '').trim();
+  var argm = ((document.getElementById('f_argm') || {}).value  || '').trim();
+  var sm   = ((document.getElementById('f_sm')   || {}).value  || '').trim();
+  var sel  = document.getElementById('f_mod');
+  if (!sel) return;
+  var cur = sel.value; // preserve current selection
+  sel.innerHTML = '';
+  [rgm, argm, sm].forEach(function(n){
+    if (!n) return;
+    var o = document.createElement('option');
+    o.value = n; o.textContent = n;
+    sel.appendChild(o);
+  });
+  // Default: RGM value; otherwise restore previous selection
+  if (cur && sel.querySelector('option[value="'+cur+'"]')) {
+    sel.value = cur;
+  } else if (rgm) {
+    sel.value = rgm;
+  }
+}
+
+/* ══════════════════════════════════════════════════════
+   CUSTOM CLOCK (DESKTOP) — spinner with +/- buttons
+══════════════════════════════════════════════════════ */
+var clockTarget = null;
+var clkH = 8, clkM = 0;
+var _spinTimer = null;
+
+function updateClockDisplay(){
+  var hs = String(clkH).padStart(2,'0');
+  var ms = String(clkM).padStart(2,'0');
+  var hd = document.getElementById('clkHDisp'), hv = document.getElementById('clkHVal');
+  var md = document.getElementById('clkMDisp'), mv = document.getElementById('clkMVal');
+  if(hd) hd.textContent = hs;
+  if(hv) hv.textContent = hs;
+  if(md) md.textContent = ms;
+  if(mv) mv.textContent = ms;
+}
+
+function spinStep(part, delta){
+  if(part === 'h'){
+    clkH = ((clkH + delta) % 24 + 24) % 24;
+  } else {
+    clkM = ((clkM + delta) % 60 + 60) % 60;
+  }
+  updateClockDisplay();
+}
+
+function startSpin(part, delta){
+  spinStep(part, delta);
+  _spinTimer = setTimeout(function repeat(){
+    spinStep(part, delta);
+    _spinTimer = setTimeout(repeat, 100);
+  }, 400);
+}
+
+document.addEventListener('mouseup',    function(){ clearTimeout(_spinTimer); });
+document.addEventListener('touchend',   function(){ clearTimeout(_spinTimer); });
+document.addEventListener('touchcancel',function(){ clearTimeout(_spinTimer); });
+
+function openClock(key){
+  clockTarget = key;
+  document.getElementById('clockLabel').textContent =
+    key === 'arr' ? 'Set Arrival Time' : 'Set Departure Time';
+  var cur = (document.getElementById('f_'+key) || {}).value || '08:00';
+  var parts = cur.split(':');
+  clkH = parseInt(parts[0]) || 0;
+  clkM = parseInt(parts[1]) || 0;
+  updateClockDisplay();
+  document.getElementById('clockOverlay').classList.add('open');
+}
+function closeClock(){
+  clearTimeout(_spinTimer);
+  document.getElementById('clockOverlay').classList.remove('open');
+}
+function confirmClock(){
+  clearTimeout(_spinTimer);
+  var val = String(clkH).padStart(2,'0') + ':' + String(clkM).padStart(2,'0');
+  if(clockTarget){
+    var hidden = document.getElementById('f_'+clockTarget);
+    var disp   = document.getElementById('f_'+clockTarget+'_display');
+    if(hidden) hidden.value = val;
+    if(disp)   disp.value   = val;
+    saveToStorage();
+  }
+  closeClock();
+}
+
+
+/* ══════════════════════════════════════════════════════
+   IMAGE HANDLING
+══════════════════════════════════════════════════════ */
+function onFilePick(input, key){
+  if (!input.files || !input.files[0]) return;
+  var r = new FileReader();
+  r.onload = function(e){ storeImage(key, e.target.result); saveToStorage(); };
+  r.readAsDataURL(input.files[0]);
+  input.value = '';
+}
+function storeImage(key, dataUrl){
+  images[key] = dataUrl;
+  var prev = document.getElementById('iprev_'+key);
+  var img  = document.getElementById('iimg_'+key);
+  if (img)  img.src = dataUrl;
+  if (prev) { prev.style.display = 'block'; prev.style.paddingTop = '12px'; prev.style.paddingRight = '12px'; }
+}
+/* DOM-only clear — no saveToStorage (used in bulk-clear loops) */
+function _clearImgUI(key){
+  delete images[key];
+  var prev = document.getElementById('iprev_'+key);
+  var img  = document.getElementById('iimg_'+key);
+  if (img)  img.src = '';
+  if (prev) prev.style.display = 'none';
+  var fileEl = document.getElementById('ifile_'+key);
+  if (fileEl) fileEl.value = '';
+}
+/* Full remove — clears DOM + saves (used when user taps ✕ on a photo) */
+function removeImg(key){
+  _clearImgUI(key);
+  saveToStorage();
+}
+
+/* ══════════════════════════════════════════════════════
+   STORAGE
+   Main form data : vrt_v15_<outlet>
+   Staff fields   : vrt_v15_staff_<outlet>  ← dedicated, outlet-wise
+   Last outlet    : vrt_v15_lastOutlet
+══════════════════════════════════════════════════════ */
+var LS_PREFIX = 'vrt_v15_';
+var LS_STAFF  = 'vrt_v15_staff_';
+var LS_LAST   = 'vrt_v15_lastOutlet';
+
+var STAFF_IDS = ['f_rgm','f_argm','f_sm','f_rgmDC','f_argmDC','f_smDC'];
+
+function outletKey(outlet){ return LS_PREFIX + (outlet||'default').replace(/\s+/g,'_'); }
+function staffKey(outlet) { return LS_STAFF  + (outlet||'default').replace(/\s+/g,'_'); }
+
+/* ── Save entire form snapshot for current outlet ── */
+var _autosaveTimer;
+function saveToStorage(){
+  try {
+    var outlet = currentOutlet();
+    var snap = {};
+    document.querySelectorAll('[data-key]').forEach(function(el){
+      snap[el.id] = el.value;
+    });
+    snap._fieldColors = fieldColors;
+    snap._images = images;
+    localStorage.setItem(outletKey(outlet), JSON.stringify(snap));
+    localStorage.setItem(LS_LAST, outlet);
+    var as = document.getElementById('autosave');
+    if (as) {
+      as.classList.add('show');
+      clearTimeout(_autosaveTimer);
+      _autosaveTimer = setTimeout(function(){ as.classList.remove('show'); }, 1200);
+    }
+  } catch(e){}
+}
+
+/* ── Save ONLY staff fields for a specific outlet (outlet-wise staff storage) ── */
+function saveStaffFields(outletId){
+  if (!outletId) return;
+  try {
+    var data = {};
+    STAFF_IDS.forEach(function(id){
+      var el = document.getElementById(id);
+      if (el) data[id] = el.value;
+    });
+    localStorage.setItem(staffKey(outletId), JSON.stringify(data));
+  } catch(e){}
+}
+
+/* ── Load ONLY staff fields for a specific outlet ── */
+function loadStaffFields(outletId){
+  try {
+    var raw = localStorage.getItem(staffKey(outletId));
+    /* Fallback: try reading from full-form snapshot (backwards compat) */
+    if (!raw) {
+      var fullRaw = localStorage.getItem(outletKey(outletId));
+      if (fullRaw) {
+        var fullSnap = JSON.parse(fullRaw);
+        var subset = {};
+        STAFF_IDS.forEach(function(id){ if (fullSnap[id] !== undefined) subset[id] = fullSnap[id]; });
+        if (Object.keys(subset).length) raw = JSON.stringify(subset);
+      }
+    }
+    var snap = raw ? JSON.parse(raw) : null;
+    ['f_rgm','f_argm','f_sm'].forEach(function(id){
+      var el = document.getElementById(id);
+      if (el) el.value = (snap && snap[id] !== undefined) ? snap[id] : '';
+    });
+    var dcDefaults = {f_rgmDC:'LAR 2', f_argmDC:'LAR 1', f_smDC:'LAS'};
+    Object.keys(dcDefaults).forEach(function(id){
+      var el = document.getElementById(id);
+      if (el) el.value = (snap && snap[id] !== undefined) ? snap[id] : dcDefaults[id];
+    });
+  } catch(e){
+    var d1 = document.getElementById('f_rgmDC');  if(d1) d1.value = 'LAR 2';
+    var d2 = document.getElementById('f_argmDC'); if(d2) d2.value = 'LAR 1';
+    var d3 = document.getElementById('f_smDC');   if(d3) d3.value = 'LAS';
+  }
+  updateMOD();
+}
+
+/* ── Load full form snapshot for an outlet (page-restore only) ── */
+function loadOutletData(outlet){
+  try {
+    var raw = localStorage.getItem(outletKey(outlet));
+    if (!raw) return false;
+    var snap = JSON.parse(raw);
+    document.querySelectorAll('[data-key]').forEach(function(el){
+      if (el.id === 'f_outlet') return;
+      if (snap[el.id] !== undefined) el.value = snap[el.id];
+    });
+    fieldColors = snap._fieldColors || {};
+    Object.keys(fieldColors).forEach(function(k){ applyFieldStyle(k); });
+    var savedImgs = snap._images || {};
+    IMG_KEYS.forEach(function(k){ _clearImgUI(k); }); // DOM-only, no redundant saves
+    Object.keys(savedImgs).forEach(function(k){ storeImage(k, savedImgs[k]); });
+    document.querySelectorAll('textarea[maxlength]').forEach(function(ta){
+      var cc = document.getElementById('cc_'+ta.dataset.key);
+      if (cc) cc.textContent = ta.value.length;
+    });
+    ['arr','dep'].forEach(function(k){
+      var disp = document.getElementById('f_'+k+'_display');
+      var hidden = document.getElementById('f_'+k);
+      if (disp && hidden && hidden.value) disp.value = hidden.value;
+    });
+    updateMOD();
+    return true;
+  } catch(e){ return false; }
+}
+
+/* ── Restore last session on page load ── */
+function loadFromStorage(){
+  var lastOutlet = localStorage.getItem(LS_LAST);
+  var el = document.getElementById('f_outlet');
+  if (lastOutlet && el) el.value = lastOutlet;
+  loadOutletData(currentOutlet());
+  _prevOutlet = currentOutlet(); // initialise tracker after restore
+}
+
+/* ══════════════════════════════════════════════════════
+   CUSTOM OUTLET HANDLING
+══════════════════════════════════════════════════════ */
+var _customOutletName = '';
+var _prevOutlet = null; /* tracks outlet we're leaving, for staff save */
+
+/* ── Clear all non-staff fields (used on outlet change) ── */
+function clearNonStaffFields(){
+  var staffSet = {};
+  STAFF_IDS.forEach(function(id){ staffSet[id] = true; });
+
+  document.querySelectorAll('[data-key]').forEach(function(el){
+    if (el.id === 'f_outlet') return;    // keep outlet selector
+    if (staffSet[el.id]) return;         // keep staff fields (loaded separately)
+    if (el.tagName === 'SELECT') el.selectedIndex = 0;
+    else if (el.type === 'checkbox') el.checked = false;
+    else el.value = '';
+    el.classList.remove('f-red','f-green');
+    el.style.color = '';
+  });
+  ['arr','dep'].forEach(function(k){
+    var disp = document.getElementById('f_'+k+'_display');
+    if (disp) disp.value = '';
+  });
+  IMG_KEYS.forEach(function(k){ _clearImgUI(k); });
+  document.querySelectorAll('textarea[maxlength]').forEach(function(ta){
+    var cc = document.getElementById('cc_'+ta.dataset.key);
+    if (cc) cc.textContent = '0';
+  });
+  fieldColors = {};
+  applyFormDefaults(); // set today's date, trainer, clean-rating defaults
+}
+
+function handleOutletChange(){
+  var sel = document.getElementById('f_outlet');
+  if (!sel) return;
+  if (sel.value === 'Other') {
+    openOutletModal();
+  } else {
+    if (_prevOutlet) saveStaffFields(_prevOutlet);
+    _customOutletName = '';
+    var otherOpt = document.querySelector('#f_outlet option[value="Other"]');
+    if (otherOpt) otherOpt.textContent = 'Other';
+    var newOutlet = sel.value;
+    _prevOutlet = newOutlet;
+    clearNonStaffFields();       // wipe all other fields
+    loadStaffFields(newOutlet);  // load only staff fields for this outlet
+    showToast('Outlet changed. Staff fields loaded for ' + newOutlet, 'ok');
+  }
+}
+
+function confirmOutletModal(){
+  var inp  = document.getElementById('om-input');
+  var name = inp ? inp.value.trim() : '';
+  if (!name) { showToast('Please enter an outlet name.', 'warn'); return; }
+  if (_prevOutlet) saveStaffFields(_prevOutlet);
+  _customOutletName = name;
+  var modal = document.getElementById('outlet-modal');
+  if (modal) modal.classList.remove('open');
+  var sel = document.getElementById('f_outlet');
+  if (sel) {
+    var otherOpt = sel.querySelector('option[value="Other"]');
+    if (otherOpt) otherOpt.textContent = name;
+    sel.value = 'Other';
+  }
+  var outletId = currentOutlet();
+  _prevOutlet = outletId;
+  clearNonStaffFields();      // wipe all other fields
+  loadStaffFields(outletId);  // load only staff fields for this outlet
+  showToast('Outlet set to: ' + name, 'ok');
+}
+
+function openOutletModal(){
+  var modal = document.getElementById('outlet-modal');
+  var inp   = document.getElementById('om-input');
+  if (inp) inp.value = _customOutletName || '';
+  if (modal) modal.classList.add('open');
+  setTimeout(function(){ if(inp) inp.focus(); }, 80);
+}
+
+function cancelOutletModal(){
+  var modal = document.getElementById('outlet-modal');
+  if (modal) modal.classList.remove('open');
+  var sel = document.getElementById('f_outlet');
+  if (sel && !_customOutletName) {
+    var otherOpt = sel.querySelector('option[value="Other"]');
+    if (otherOpt) otherOpt.textContent = 'Other';
+    sel.value = _prevOutlet || 'Union Place';
+  }
+}
+
+function currentOutlet(){
+  var el = document.getElementById('f_outlet');
+  var val = el ? el.value.trim() : 'default';
+  if (val === 'Other') return _customOutletName ? 'custom_'+_customOutletName.replace(/\s+/g,'_') : 'custom_other';
+  return val;
+}
+
+/* Outlet change handled by handleOutletChange() via onchange attribute */
+
+// Auto-save on field blur — full form save + staff-only save for staff fields
+document.addEventListener('focusout', function(e){
+  var el = e.target;
+  if (!el || !el.dataset || !el.dataset.key) return;
+  saveToStorage();
+  /* If a staff field was edited, also update dedicated staff storage */
+  if (STAFF_IDS.indexOf(el.id) !== -1) {
+    saveStaffFields(currentOutlet());
+  }
+});
+
+/* ══════════════════════════════════════════════════════
+   RESET / RESTORE
+══════════════════════════════════════════════════════ */
+function snapshotForm(){
+  var snap = {};
+  document.querySelectorAll('[data-key]').forEach(function(el){
+    snap[el.id] = el.value;
+  });
+  snap._fieldColors = JSON.parse(JSON.stringify(fieldColors));
+  snap._images = JSON.parse(JSON.stringify(images));
+  return snap;
+}
+
+/* Confirm modal: two modes — 'reset' (default) and 'newform' */
+var _confirmMode = 'reset';
+
+function resetForm(){
+  _confirmMode = 'reset';
+  var modal = document.getElementById('confirm-modal');
+  document.querySelector('.cfm-title').textContent = 'Reset Form?';
+  document.querySelector('.cfm-msg').innerHTML = 'This will clear all fields for the current outlet.<br>Your data will be saved and can be <strong>Restored</strong>.';
+  document.querySelector('.cfm-btn.danger').textContent = 'Yes, Reset';
+  modal.classList.add('open');
+}
+
+function newForm(){
+  _confirmMode = 'newform';
+  var modal = document.getElementById('confirm-modal');
+  document.querySelector('.cfm-title').textContent = 'New Form?';
+  document.querySelector('.cfm-msg').innerHTML = 'This will clear <strong>all fields</strong> completely.<br>Staff fields will reload when you select an outlet.';
+  document.querySelector('.cfm-btn.danger').textContent = 'Yes, New Form';
+  modal.classList.add('open');
+}
+
+function closeConfirm(){
+  document.getElementById('confirm-modal').classList.remove('open');
+}
+
+function confirmAction(){
+  closeConfirm();
+  if (_confirmMode === 'newform') {
+    confirmNewForm();
+  } else {
+    confirmReset();
+  }
+}
+
+function confirmReset(){
+  savedSnapshot = snapshotForm();
+  document.querySelectorAll('[data-key]').forEach(function(el){
+    if (el.tagName==='SELECT') el.selectedIndex = 0;
+    else if (el.type==='checkbox') el.checked = false;
+    else el.value = '';
+    el.classList.remove('f-red','f-green');
+    el.style.color = '';
+  });
+  ['arr','dep'].forEach(function(k){
+    var disp = document.getElementById('f_'+k+'_display');
+    if (disp) disp.value = '';
+  });
+  var outletEl = document.getElementById('f_outlet');
+  if (outletEl) { outletEl.value = 'Union Place'; _customOutletName = ''; }
+  _prevOutlet = 'Union Place';
+  applyFormDefaults();
+  loadStaffFields('Union Place');
+  IMG_KEYS.forEach(function(k){ _clearImgUI(k); }); // bulk clear — one save at end
+  document.querySelectorAll('textarea[maxlength]').forEach(function(ta){
+    var cc = document.getElementById('cc_'+ta.dataset.key);
+    if (cc) cc.textContent = '0';
+  });
+  fieldColors = {};
+  updateMOD();
+  document.getElementById('btnRestore').style.display = 'inline-block';
+  saveToStorage();
+  showToast('Form reset. Tap Restore to undo.', 'ok');
+}
+function restoreForm(){
+  if (!savedSnapshot){ showToast('Nothing to restore.','warn'); return; }
+  document.querySelectorAll('[data-key]').forEach(function(el){
+    var v = savedSnapshot[el.id];
+    if (v !== undefined) el.value = v;
+  });
+  fieldColors = savedSnapshot._fieldColors || {};
+  // Re-apply colour styles
+  Object.keys(fieldColors).forEach(function(k){ applyFieldStyle(k); });
+  // Restore images
+  var oldImgs = savedSnapshot._images || {};
+  IMG_KEYS.forEach(function(k){ removeImg(k); });
+  Object.keys(oldImgs).forEach(function(k){ storeImage(k, oldImgs[k]); });
+  // Restore char counters
+  document.querySelectorAll('textarea[maxlength]').forEach(function(ta){
+    var cc = document.getElementById('cc_'+ta.dataset.key);
+    if (cc) cc.textContent = ta.value.length;
+  });
+  // Restore time display fields
+  ['arr','dep'].forEach(function(k){
+    var disp = document.getElementById('f_'+k+'_display');
+    var hidden = document.getElementById('f_'+k);
+    if (disp && hidden) disp.value = hidden.value || '';
+  });
+  updateMOD();
+  document.getElementById('btnRestore').style.display = 'none';
+  savedSnapshot = null;
+  showToast('Form restored.', 'ok');
+}
+
+
+/* Apply common form defaults (date, trainer, clean ratings) */
+function applyFormDefaults(){
+  var d   = new Date();
+  var today = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  var dateEl = document.getElementById('f_date_');
+  var trainerEl = document.getElementById('f_trainer');
+  if (dateEl)    dateEl.value    = today;
+  if (trainerEl) trainerEl.value = 'Thushara';
+  ['f_mtClean','f_ptClean','f_ctClean'].forEach(function(id){
+    var el = document.getElementById(id);
+    if (el) el.value = 'Good';
+  });
+}
+
+/* New form: completely blank form. Staff fields reload when outlet is selected. */
+function confirmNewForm(){
+  // Wipe all fields
+  document.querySelectorAll('[data-key]').forEach(function(el){
+    if (el.tagName==='SELECT') el.selectedIndex = 0;
+    else if (el.type==='checkbox') el.checked = false;
+    else el.value = '';
+    el.classList.remove('f-red','f-green');
+    el.style.color = '';
+  });
+  // Reset time display fields
+  ['arr','dep'].forEach(function(k){
+    var disp = document.getElementById('f_'+k+'_display');
+    if (disp) disp.value = '';
+  });
+  // Reset outlet to Union Place
+  var outletEl = document.getElementById('f_outlet');
+  if (outletEl) { outletEl.value = 'Union Place'; _customOutletName = ''; }
+  _prevOutlet = 'Union Place';
+  // Apply form defaults (trainer, date, clean ratings)
+  applyFormDefaults();
+  // Load staff fields from storage for Union Place
+  loadStaffFields('Union Place');
+  // Clear images (bulk clear — one save at end)
+  IMG_KEYS.forEach(function(k){ _clearImgUI(k); });
+  // Reset char counters
+  document.querySelectorAll('textarea[maxlength]').forEach(function(ta){
+    var cc = document.getElementById('cc_'+ta.dataset.key);
+    if (cc) cc.textContent = '0';
+  });
+  fieldColors = {};
+  updateMOD();
+  document.getElementById('btnRestore').style.display = 'none';
+  savedSnapshot = null;
+  saveToStorage(); // single save after full wipe
+  showToast('New form ready. Select an outlet to load staff fields.', 'ok');
+}
+
+/* ══════════════════════════════════════════════════════
+   AUTO-FILL DATE + LOAD SAVED DATA
+══════════════════════════════════════════════════════ */
+(function(){
+  var d   = new Date();
+  var today = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  loadFromStorage();
+  // Always force today's date regardless of saved value
+  var el = document.getElementById('f_date_');
+  if (el) el.value = today;
+})();
+
+/* ══════════════════════════════════════════════════════
+   COLLECT FORM DATA
+══════════════════════════════════════════════════════ */
+function makeCell(key, suffix){
+  var el  = document.getElementById('f_'+key);
+  var val = el ? el.value.trim() : '';
+  if (suffix && val) val = val + suffix;
+  var c   = fieldColors[key] || null;
+  return {
+    val    : val,
+    fontHex: c==='red' ? 'FF0000' : (c==='green' ? '00B050' : null),
+    bgHex  : null,
+    red    : c==='red',
+    green  : c==='green',
+    bgRed  : false, bgGreen: false
+  };
+}
+
+function collectFormData(){
+  // For MOD: get the selected option text (which is the name)
+  var modEl  = document.getElementById('f_mod');
+  var modVal = modEl ? (modEl.options[modEl.selectedIndex] ? modEl.options[modEl.selectedIndex].text : '') : '';
+  var c = fieldColors['mod'] || null;
+  var modCell = {
+    val: modVal, fontHex: c==='red'?'FF0000':(c==='green'?'00B050':null),
+    bgHex:null, red:c==='red', green:c==='green', bgRed:false, bgGreen:false
+  };
+
+  return {
+    outlet:(function(){
+      var sel = document.getElementById('f_outlet');
+      var val = (sel && sel.value === 'Other') ? _customOutletName : makeCell('outlet').val;
+      var c = fieldColors['outlet'] || null;
+      return {val:val, fontHex:c==='red'?'FF0000':(c==='green'?'00B050':null),
+        bgHex:null, red:c==='red', green:c==='green', bgRed:false, bgGreen:false};
+    })(),  date_:makeCell('date_'),
+    trainer:makeCell('trainer'),mtm:makeCell('mtm'),
+    arr:makeCell('arr'),        dep:makeCell('dep'),
+
+    ace:makeCell('ace'),        gesTB:makeCell('gesTB'),
+    tmts:makeCell('tmts'),      gesDer:makeCell('gesDer'),
+    sri:makeCell('sri'),        gesB2B:makeCell('gesB2B'),
+    idp:makeCell('idp'),        noGES:makeCell('noGES'),
+    rgm:makeCell('rgm'),        noBTs:makeCell('noBTs'),
+    argm:makeCell('argm'),      rgmDC:makeCell('rgmDC'),
+    sm:makeCell('sm'),          argmDC:makeCell('argmDC'),
+    mod:modCell,                smDC:makeCell('smDC'),
+    starYTD:makeCell('starYTD'),
+
+    groomComm:makeCell('groomComm'),
+
+    hwSink:makeCell('hwSink'),  hwComm:makeCell('hwComm'),
+
+    doughBook:makeCell('doughBook'), doughStd:makeCell('doughStd'),
+    doughC1:makeCell('doughC1'),     doughC2:makeCell('doughC2'),
+
+    coolTemp:makeCell('coolTemp'),   coolMRD:makeCell('coolMRD'),
+    coolBack:makeCell('coolBack'),   coolQual:makeCell('coolQual'),
+    coolComm:makeCell('coolComm'),
+
+    freezComm:makeCell('freezComm'),
+    chestComm:makeCell('chestComm'),
+
+    mtMRD:makeCell('mtMRD'),    mtTemp:makeCell('mtTemp','\u00b0C'),
+    mtLayout:makeCell('mtLayout'), mtRefill:makeCell('mtRefill'),
+    mtBack:makeCell('mtBack'),  mtQual:makeCell('mtQual'),
+    mtSOP:makeCell('mtSOP'),    mtClean:makeCell('mtClean'),
+    mtComm:makeCell('mtComm'),
+
+    ptMRD:makeCell('ptMRD'),    ptTemp:makeCell('ptTemp','\u00b0C'),
+    ptRefill:makeCell('ptRefill'), ptQual:makeCell('ptQual'),
+    ptSOP:makeCell('ptSOP'),    ptClean:makeCell('ptClean'),
+    ptComm:makeCell('ptComm'),
+
+    ctClean:makeCell('ctClean'), ctGarnish:makeCell('ctGarnish'),
+    ctComm:makeCell('ctComm'),
+
+    bohClean:makeCell('bohClean'), bohVeg:makeCell('bohVeg'),
+    bohPasta:makeCell('bohPasta'), bohRice:makeCell('bohRice'),
+    bohIce:makeCell('bohIce'),     bohSink:makeCell('bohSink'),
+    bohMelts:makeCell('bohMelts'), bohThaw:makeCell('bohThaw'),
+    bohComm:makeCell('bohComm'),
+
+    panS:makeCell('panS'),   whiteS:makeCell('whiteS'),
+    arrMix:makeCell('arrMix'), arabS:makeCell('arabS'),
+    tiS:makeCell('tiS'),     kochS:makeCell('kochS'),
+    mayoS:makeCell('mayoS'),
+
+    oven1:makeCell('oven1'),   oven2:makeCell('oven2'),
+    ovenTemp:makeCell('ovenTemp'), ovenBelt:makeCell('ovenBelt'),
+
+    bohTmName:makeCell('bohTmName'), bohTmQ:makeCell('bohTmQ'),
+
+    fohClean:makeCell('fohClean'), fohCut:makeCell('fohCut'),
+    fohMenu:makeCell('fohMenu'),   fohWash:makeCell('fohWash'),
+    fohElec:makeCell('fohElec'),   fohBT:makeCell('fohBT'),
+    fohMOC:makeCell('fohMOC'),     fohComm:makeCell('fohComm'),
+    fohTmName:makeCell('fohTmName'), fohTmQ:makeCell('fohTmQ'),
+
+    riderCL:makeCell('riderCL'),   riderPch:makeCell('riderPch'),
+    riderBike:makeCell('riderBike'), riderComm:makeCell('riderComm'),
+
+    huFOH:makeCell('huFOH'),     huRider:makeCell('huRider'),
+    huBOH:makeCell('huBOH'),     huOverall:makeCell('huOverall'),
+
+    crText:makeCell('crText')
+  };
+}
+
+/* ══════════════════════════════════════════════════════
+   PDF GENERATION
+   Desktop : window.open popup → win.print()
+   Mobile  : CSS overlay → window.print() directly in rAF
+             (setTimeout breaks iOS user-gesture context)
+══════════════════════════════════════════════════════ */
+function generate(){
+  saveToStorage();
+  var d = collectFormData();
+  var html = buildHTML(d, images || {});
+  generateReport(html);
+}
+
+var _isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+function generateReport(html) {
+  /* Mobile: always use overlay — popup unreliable + gesture context lost */
+  if (_isMobile) {
+    printWithOverlay(html);
+    return;
+  }
+
+  /* Desktop: try popup window */
+  var win = null;
+  try { win = window.open('', '_blank'); } catch(e) {}
+
+  if (win && !win.closed) {
+    win.document.open();
+    win.document.write(html);
+    win.document.close();
+    var _printed = false;
+    function doPrint(){
+      if (_printed) return;
+      _printed = true;
+      win.focus();
+      win.print();
+    }
+    if (win.document.readyState === 'complete') doPrint();
+    else win.onload = doPrint;
+    setTimeout(doPrint, 900);
+    return;
+  }
+
+  /* Desktop popup blocked — fall back to overlay */
+  printWithOverlay(html);
+}
+
+function printWithOverlay(html) {
+  /* Remove stale overlay */
+  var old = document.getElementById('_print_overlay');
+  if (old) old.parentNode.removeChild(old);
+
+  /* Parse report HTML — extract <style> blocks + body */
+  var parser   = new DOMParser();
+  var doc      = parser.parseFromString(html, 'text/html');
+  var styleHTML = Array.from(doc.querySelectorAll('style'))
+    .map(function(s){ return '<style>' + s.textContent + '</style>'; }).join('');
+  var bodyHTML  = doc.body ? doc.body.innerHTML : html;
+
+  /* Inject overlay into page */
+  var overlay = document.createElement('div');
+  overlay.id  = '_print_overlay';
+  overlay.innerHTML = styleHTML + bodyHTML;
+  document.body.appendChild(overlay);
+
+  /* Show hint before dialog appears (on mobile) */
+  if (_isMobile) showToast('Print dialogue eke "Save as PDF" select karanna 📄', 'ok');
+
+  /* Switch page into overlay-print mode */
+  document.body.classList.add('printing-overlay');
+
+  /* Force a synchronous reflow — ensures the browser has computed layout
+     before window.print() opens the dialog. This also keeps us within
+     the user-gesture context on iOS/Android (no setTimeout, no rAF needed). */
+  void document.body.offsetHeight;
+
+  /* Call window.print() — synchronous, gesture context preserved on all browsers */
+  window.print();
+
+  /* Cleanup after print dialog closes.
+     window.print() is blocking on desktop; on iOS it returns immediately
+     so we rely on afterprint event + fallback timeout. */
+  function cleanup(){
+    window.removeEventListener('afterprint', cleanup);
+    document.body.classList.remove('printing-overlay');
+    var o = document.getElementById('_print_overlay');
+    if (o) o.parentNode.removeChild(o);
+    window._exitPrintOverlay = null;
+  }
+  /* Expose for overlay "Back to Form" button */
+  window._exitPrintOverlay = cleanup;
+
+  if (_isMobile) {
+    /* Mobile (iOS/Android): afterprint fires immediately after window.print() returns —
+       BEFORE the browser renders the print preview. Using afterprint or a timeout here
+       would run cleanup() too early, stripping the overlay and leaving the raw form
+       visible when the OS captures the print content.
+       Solution: keep the overlay alive; user dismisses it via "← Back to Form". */
+  } else {
+    /* Desktop: afterprint fires reliably after the print dialog fully closes. */
+    window.addEventListener('afterprint', cleanup);
+    setTimeout(cleanup, 10000); /* fallback — afterprint may not fire on some browsers */
+  }
+}
+
+/* ══════════════════════════════════════════════════════
+   SYNC CLOCK DISPLAY INPUT WITH HIDDEN TIME INPUT
+══════════════════════════════════════════════════════ */
+['arr','dep'].forEach(function(key){
+  var timeInput = document.getElementById('f_'+key);
+  var disp = document.getElementById('f_'+key+'_display');
+  if (timeInput) {
+    timeInput.addEventListener('change', function(){
+      if (disp) disp.value = timeInput.value;
+    });
+  }
+});
+
+
+/* ── Build report HTML ─────────────────────────────────────────────────────── */
+function buildHTML(d, images) {
+  var G   = '#488351';
+  var R   = '#ce232b';
+  var VBG = '#e8e8e8';
+  images = images || {};
+
+  function esc(s) {
+    return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  /* Mix a 6-char hex color with white at (factor)% opacity, return #rrggbb */
+  function tintHex(hex, factor) {
+    var r = parseInt(hex.substring(0,2),16), g = parseInt(hex.substring(2,4),16), b = parseInt(hex.substring(4,6),16);
+    r = Math.round(r*factor + 255*(1-factor));
+    g = Math.round(g*factor + 255*(1-factor));
+    b = Math.round(b*factor + 255*(1-factor));
+    return '#' + r.toString(16).padStart(2,'0') + g.toString(16).padStart(2,'0') + b.toString(16).padStart(2,'0');
+  }
+
+  /* Resolve cell to text color string */
+  function cellColor(cell) {
+    if (!cell) return '#222';
+    if (cell.fontHex) return '#' + cell.fontHex;
+    return '#222';
+  }
+
+  /* Resolve cell to background color string */
+  function cellBg(cell) {
+    if (!cell) return VBG;
+    if (cell.bgHex) return tintHex(cell.bgHex, 0.28);
+    if (cell.red)   return '#fff3f3';
+    if (cell.green) return '#f3fff3';
+    return VBG;
+  }
+
+  /* Main section header – green background with ■ symbol */
+  function sec(t, noTop, darkBg) {
+    var bg = darkBg ? '#241F21' : G;
+    return '<div style="background:' + bg + ';color:#fff;font-weight:700;font-size:10pt;' +
+      'padding:5px 10px 12px;margin:' + (noTop ? '14px' : '50px') + ' 0 0;letter-spacing:.2px;' +
+      '-webkit-print-color-adjust:exact;print-color-adjust:exact">' +
+      '🍕 ' + esc(t) + '</div>';
+  }
+
+  /* Sub-section header – green background, NO square symbol, same style as sec() */
+  function sub(t, first) {
+    return '<div style="background:' + G + ';color:#fff;font-weight:700;font-size:9.5pt;' +
+      'padding:4px 10px 12px;margin:' + (first ? '8px' : '50px') + ' 0 0;letter-spacing:.1px;' +
+      '-webkit-print-color-adjust:exact;print-color-adjust:exact">' +
+      esc(t) + '</div>';
+  }
+
+  /* Comment block + optional photo.
+     cell = {val, red, green, bgRed}, imgKey = key into images{} */
+  function cmtBlock(label, cell, imgKey) {
+    var text  = cell ? cell.val : '';
+    var isRed = cell ? cell.red   : false;
+    var isGrn = cell ? cell.green : false;
+    var imgSrc = (imgKey && images[imgKey]) ? images[imgKey] : null;
+
+    var textPart = '';
+    if (label) {
+      textPart += '<div style="font-size:8pt;font-weight:600;color:#555;margin:0 0 1px 0;padding-left:2px">' + esc(label) + '</div>';
+    }
+    if (text && text.trim() !== '') {
+      var col = isRed ? R : (isGrn ? G : '#333');
+      var brd = isRed ? R : (isGrn ? G : '#bbb');
+      var bg  = isRed ? '#fff3f3' : (isGrn ? '#f3fff5' : '#f6f6f6');
+      textPart += '<div style="font-size:10pt;padding:5px 10px 5px 12px;margin:2px 0 4px;' +
+        'border-left:3px solid ' + brd + ';background:' + bg + ';color:' + col + ';' +
+        '-webkit-print-color-adjust:exact;print-color-adjust:exact">' +
+        esc(text) + '</div>';
+    }
+
+    /* Only show photo section when a photo has actually been uploaded */
+    if (imgSrc) {
+      var imgBox = '<div style="margin-top:14px;text-align:right">' +
+        '<div style="display:inline-flex;align-items:center;justify-content:center;' +
+          'width:175px;height:175px;border:1px solid ' + G + ';border-radius:5px;padding:1px;' +
+          'overflow:hidden;background:#f8fff9;' +
+          '-webkit-print-color-adjust:exact;print-color-adjust:exact">' +
+        '<img src="' + imgSrc + '" style="max-width:100%;max-height:100%;object-fit:contain;display:block">' +
+        '</div></div>';
+      return '<div style="margin-top:18px">' + textPart + imgBox + '</div>';
+    }
+
+    return '<div style="margin-top:18px">' + textPart + '</div>';
+  }
+
+  var ri = 0;
+
+  /* r4: 4-column row (label1, cell1, label2, cell2).
+     cell can be a {val,red,green,bgRed} object or a plain string. */
+  function r4(l1, c1, l2, c2) {
+    var v1 = (typeof c1 === 'object' && c1) ? c1.val : (c1 || '');
+    var v2 = (typeof c2 === 'object' && c2) ? c2.val : (c2 || '');
+    if (!v1 && !v2 && !l2) return '';
+
+    var altBg = (ri++ % 2 === 0) ? '#fff' : '#f5f5f5';
+    var lSt  = 'padding:4px 8px;font-size:10pt;color:#555;background:' + altBg + ';';
+    function vSt(cell) {
+      var bg = cellBg(cell);
+      return 'padding:4px 8px;font-size:10pt;font-weight:400;color:' + cellColor(cell) + ';background:' + bg + ';' +
+        '-webkit-print-color-adjust:exact;print-color-adjust:exact';
+    }
+    var r2str = (l2 !== undefined)
+      ? '<td style="' + lSt + 'width:20%">' + esc(l2 || '') + '</td>' +
+        '<td style="' + vSt(c2 && typeof c2 === 'object' ? c2 : null) + ';width:18%">' + esc(v2) + '</td>'
+      : '<td style="background:' + altBg + '"></td><td style="background:' + altBg + '"></td>';
+
+    return '<tr style="-webkit-print-color-adjust:exact;print-color-adjust:exact">' +
+      '<td style="' + lSt + 'width:24%">' + esc(l1) + '</td>' +
+      '<td style="' + vSt(c1 && typeof c1 === 'object' ? c1 : null) + ';width:20%">' + esc(v1) + '</td>' +
+      r2str + '</tr>';
+  }
+
+  /* r2: 2-column row (label, cell). */
+  function r2(label, c1) {
+    var val  = (typeof c1 === 'object' && c1) ? c1.val : (c1 || '');
+    var altBg = (ri++ % 2 === 0) ? '#fff' : '#f5f5f5';
+    return '<tr style="-webkit-print-color-adjust:exact;print-color-adjust:exact">' +
+      '<td style="padding:4px 8px;font-size:10pt;color:#555;width:74%;background:' + altBg + '">' + esc(label) + '</td>' +
+      '<td style="padding:4px 8px;font-size:10pt;font-weight:400;color:' + cellColor(c1) + ';' +
+        'background:' + cellBg(c1) + ';width:26%;text-align:center;' +
+        '-webkit-print-color-adjust:exact;print-color-adjust:exact">' + esc(val) + '</td>' +
+      '</tr>';
+  }
+
+  function tbl(inner) {
+    if (!inner || inner.trim() === '') return '';
+    return '<table style="width:100%;border-collapse:collapse;margin-bottom:1px">' + inner + '</table>';
+  }
+
+  /* ── Build each table ──────────────────────────────────────────────────── */
+  ri=0; var visitT = tbl(
+    r4('Outlet',d.outlet,'Date',d.date_) +
+    r4('Trainer',d.trainer,'MTM',d.mtm) +
+    r4('Arrival Time',d.arr,'Departure Time',d.dep)
+  );
+
+  ri=0; var biT = tbl(
+    r4('Latest ACE',d.ace,'GES TB',d.gesTB) +
+    r4('Latest TMTS',d.tmts,'GES Derived',d.gesDer) +
+    r4('SRI',d.sri,'GES B2B',d.gesB2B) +
+    r4('IDP',d.idp,'No. of GES',d.noGES) +
+    r4('No. BTs',d.noBTs,'','') +
+    r4('RGM',d.rgm,'RGM DC',d.rgmDC) +
+    r4('ARGM',d.argm,'ARGM DC',d.argmDC) +
+    r4('SM',d.sm,'SM DC',d.smDC) +
+    r4('MOD',d.mod,'5 Star Rating YTD',d.starYTD)
+  );
+
+  ri=0; var hwT = tbl(r2('Hand Washing Sink good working & well arranged', d.hwSink));
+
+  ri=0; var dgT = tbl(
+    r2('Is the Dough Book Updated', d.doughBook) +
+    r2('Is Dough preparation Standard', d.doughStd)
+  );
+
+  ri=0; var crT = tbl(
+    r2('Cool Room Temperature', d.coolTemp) +
+    r2('MRD Labelling', d.coolMRD) +
+    r2('Sufficient Backup available', d.coolBack) +
+    r2('Quality of the Toppings', d.coolQual)
+  );
+
+  ri=0; var mtT = tbl(
+    r2('MRD Labelling', d.mtMRD) +
+    r2('MT Temperature', d.mtTemp) +
+    r2('MT Layout', d.mtLayout) +
+    r2('Follow the correct refilling', d.mtRefill) +
+    r2('Sufficient Backup available', d.mtBack) +
+    r2('Quality of the Toppings', d.mtQual) +
+    r2('Follow the correct SOP', d.mtSOP) +
+    r2('Cleanliness of Equipment', d.mtClean)
+  );
+
+  ri=0; var ptT = tbl(
+    r2('MRD Labelling', d.ptMRD) +
+    r2('PT Temperature', d.ptTemp) +
+    r2('Follow the correct refilling', d.ptRefill) +
+    r2('Quality of the Toppings', d.ptQual) +
+    r2('Follow the correct SOP', d.ptSOP) +
+    r2('Cleanliness of Equipment', d.ptClean)
+  );
+
+  ri=0; var ctT = tbl(
+    r2('Cleanliness of Equipment', d.ctClean) +
+    r2('All required Garnishes & Packing Materials Available', d.ctGarnish)
+  );
+
+  ri=0; var bohT = tbl(
+    r2('BOH area and Equipment well cleaned well Maintained', d.bohClean) +
+    r2('All Required Vegetables Wash & Sanitized before Preparation', d.bohVeg) +
+    r2('Pasta Boiling Process Standard', d.bohPasta) +
+    r2('Rice Preparation Process Standard', d.bohRice) +
+    r2('ICE Cube Machine & Relevant Equipment Standard', d.bohIce) +
+    r2('Follow the correct 3 Sink process & well Maintained', d.bohSink) +
+    r2('Melts Dough process', d.bohMelts) +
+    r2('Thawing Book & Thawing', d.bohThaw)
+  );
+
+  ri=0; var saT = tbl(
+    r2('Pan Sauce Preparation', d.panS) +
+    r2('White Sauce Preparation', d.whiteS) +
+    r2('Arrabbiata Mix', d.arrMix) +
+    r2('Arrabbiata Sauce Preparation', d.arabS) +
+    r2('Thousand Island Sauce Preparation', d.tiS) +
+    r2('Kochchi Sauce Preparation', d.kochS) +
+    r2('Mayo Sauce Preparation', d.mayoS)
+  );
+
+  ri=0; var ovT = tbl(
+    r2('Name of the Oven 1', d.oven1) +
+    r2('Name of the Oven 2', d.oven2) +
+    r2('Oven Temperature Standard', d.ovenTemp) +
+    r2('Oven Belt Speed Standard', d.ovenBelt)
+  );
+
+  ri=0; var bohTmT = tbl(
+    r2('TM Name', d.bohTmName) +
+    r2('Question or Skill check area', d.bohTmQ)
+  );
+
+  ri=0; var fohT = tbl(
+    r2('FOH Area well Cleaned & well Maintained', d.fohClean) +
+    r2('All Cutlery setups are arranged properly', d.fohCut) +
+    r2('All Menus Cleaned & Displayed', d.fohMenu) +
+    r2('Customer wash room Cleaned & Maintained', d.fohWash) +
+    r2('All  Electrical Equipment cleaned and working', d.fohElec) +
+    r2('BT Book Update', d.fohBT) +
+    r2('MOC/5 Smile Follow', d.fohMOC)
+  );
+
+  ri=0; var fohTmT = tbl(
+    r2('TM Name', d.fohTmName) +
+    r2('Question or Skill check area', d.fohTmQ)
+  );
+
+  ri=0; var rdT = tbl(
+    r2('Rider Check list filled and completed', d.riderCL) +
+    r2('Delivery Pouches Cleaned and well maintained', d.riderPch) +
+    r2('Delivery Bikes Cleaned and well maintained', d.riderBike)
+  );
+
+  ri=0; var huT = tbl(
+    r4('FOH', d.huFOH, 'Rider', d.huRider) +
+    r4('BOH', d.huBOH, 'Overall', d.huOverall)
+  );
+
+  /* ── Assemble full HTML ─────────────────────────────────────────────────── */
+  return '<!DOCTYPE html>\n<html lang="en">\n<head>\n<meta charset="UTF-8">\n' +
+    '<title>Trainer Visit Report</title>\n<style>\n' +
+    '*, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }\n' +
+    'body { font-family:Arial,Helvetica,sans-serif; font-size:9.5pt; color:#222; background:#d4d4d4; padding:20px; }\n' +
+
+    '#page { background:#fff; max-width:800px; margin:0 auto; box-shadow:0 2px 20px rgba(0,0,0,.18); }\n' +
+    '.body { padding:0 22px 28px; }\n' +
+    'table { border-collapse:collapse; width:100%; }\n' +
+    '@media print {\n' +
+    '  @page { size:A4; margin:12mm 15mm; }\n' +
+    '  body { background:#fff !important; padding:0 !important; }\n' +
+    '  .no-print { display:none !important; }\n' +
+    '  #page { box-shadow:none !important; max-width:100% !important; }\n' +
+    '  * { -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; color-adjust:exact !important; }\n' +
+    '}\n' +
+    '</style>\n</head>\n<body>\n' +
+
+    '<div style="max-width:800px;margin:0 auto 12px;display:flex;gap:10px;align-items:center;' +
+      '-webkit-print-color-adjust:exact;print-color-adjust:exact" class="no-print">' +
+      '<button onclick="window.print()" style="background:#488351;color:#fff;border:none;' +
+        'padding:9px 24px;font-size:13px;font-weight:700;border-radius:5px;cursor:pointer;">' +
+        '🖨️ Save as PDF</button>' +
+      '<button onclick="if(typeof window._exitPrintOverlay===\'function\'){window._exitPrintOverlay();}else{window.close();}" style="background:#ce232b;color:#fff;border:none;' +
+        'padding:9px 18px;font-size:13px;font-weight:700;border-radius:5px;cursor:pointer;">' +
+        '← Back to Form</button>' +
+    '</div>\n' +
+
+    '<div id="page">\n' +
+
+    /* ── Title bar ──────────────────────────────────────────────────────── */
+    '<div style="background:#ce232b;color:#fff;text-align:center;padding:16px 20px 14px;' +
+      'font-weight:800;font-size:17pt;letter-spacing:0.5px;' +
+      '-webkit-print-color-adjust:exact;print-color-adjust:exact">' +
+      '🍕 TRAINER VISIT REPORT</div>\n' +
+
+    '<div class="body">\n' +
+
+    /* ── Visit Information ──────────────────────────────────────────────── */
+    sec('Visit Information', true) + visitT +
+
+    /* ── Basic Information ──────────────────────────────────────────────── */
+    sec('Basic Information') + biT +
+
+    /* ── Grooming Opportunities ─────────────────────────────────────────── */
+    sec('Grooming Opportunities') +
+    cmtBlock('', d.groomComm, 'groom') +
+
+    /* ── Back of House ──────────────────────────────────────────────────── */
+    sec('Back of House', false, true) +
+
+    sub('Hand Washing Sink', true) + hwT +
+    cmtBlock('Comments on Hand Washing Sink', d.hwComm, 'hw') +
+
+    sub('Dough Area') + dgT +
+    cmtBlock('Comments on Dough Book', d.doughC1, 'doughC1') +
+    cmtBlock('Comments on Dough Area Opportunities', d.doughC2, 'doughC2') +
+
+    sub('Cool Room') + crT +
+    cmtBlock('Comments on Cool Room Opportunities', d.coolComm, 'cool') +
+
+    sub('Freezer Room') +
+    cmtBlock('Comments on Freezer Room Opportunities', d.freezComm, 'freez') +
+
+    sub('Chest Freezers') +
+    cmtBlock('Comments on Retarder Chest Freezers Opportunities', d.chestComm, 'chest') +
+
+    sub('Make Table') + mtT +
+    cmtBlock('Comments on MT Opportunities', d.mtComm, 'mt') +
+
+    sub('Pasta Table') + ptT +
+    cmtBlock('Comments on PT Opportunities', d.ptComm, 'pt') +
+
+    sub('Cut Table') + ctT +
+    cmtBlock('Comments on CT Opportunities', d.ctComm, 'ct') +
+
+    sub('Back of House Preparation Area') + bohT +
+
+    sub('Sauce Preparation') + saT +
+    cmtBlock('Comments on BOH Opportunities', d.bohComm, 'boh') +
+
+    sub('Back of House Oven') + ovT +
+
+    sub('Back of House TM Knowledge or Skill Check') + bohTmT +
+
+    /* ── Front of House ─────────────────────────────────────────────────── */
+    sec('Front of House', false, true) + fohT +
+    cmtBlock('Comments on FOH Opportunities', d.fohComm, 'foh') +
+    sub('Front of House TM Knowledge or skill check') + fohTmT +
+
+    /* ── Rider ──────────────────────────────────────────────────────────── */
+    sec('Rider') + rdT +
+    cmtBlock('Comments on Rider Opportunities', d.riderComm, 'rider') +
+
+    /* ── HU Training Completion ─────────────────────────────────────────── */
+    sec('HU Training Completion') + huT +
+
+    /* ── Class Room Session or Observation Area ─────────────────────────── */
+    sec('Class Room Session or Observation Area') +
+    cmtBlock('', d.crText, null) +
+
+    '\n</div>\n</div>\n<script src="trainer-visit-enhancements.js" defer></script>
+</body>\n</html>';
+}
+
+/* ══════════════════════════════════════════════════════
+   ENTER / NEXT KEY NAVIGATION (tabindex-based, exact order)
+══════════════════════════════════════════════════════ */
+(function(){
+  // Get all our ordered fields by tabindex
+  function getOrderedFields(){
+    return Array.from(document.querySelectorAll('[tabindex]'))
+      .filter(function(el){ return +el.getAttribute('tabindex') >= 10 && el.offsetParent !== null; })
+      .sort(function(a,b){ return +a.getAttribute('tabindex') - +b.getAttribute('tabindex'); });
+  }
+
+  document.addEventListener('keydown', function(e){
+    if (e.key !== 'Enter') return;
+    var el = document.activeElement;
+    if (!el) return;
+    if (el.tagName === 'TEXTAREA') return; // textarea: Enter = newline
+    if (el.tagName === 'BUTTON' || el.tagName === 'SELECT') return;
+    e.preventDefault();
+    var all = getOrderedFields();
+    var idx = all.indexOf(el);
+    if (idx >= 0 && idx < all.length - 1) all[idx + 1].focus();
+    else if (idx === all.length - 1) el.blur(); // last field: dismiss keyboard
+  });
+
+  // Mobile NEXT button: use enterkeyhint on ordered fields
+  document.querySelectorAll('[tabindex]').forEach(function(el){
+    if (+el.getAttribute('tabindex') < 10) return;
+    if (el.tagName === 'TEXTAREA'){
+      el.setAttribute('enterkeyhint','send');
+    } else {
+      el.setAttribute('enterkeyhint','next');
+    }
+  });
+
+  /* Scroll button visibility (desktop: show after 400px scroll) */
+  window.addEventListener('scroll', function(){
+    var scrolled = window.scrollY > 400;
+    var top = document.getElementById('scroll-top');
+    var bot = document.getElementById('scroll-bottom');
+    if (top) top.classList.toggle('visible', scrolled);
+    if (bot) bot.classList.toggle('visible', scrolled);
+  }, {passive: true});
+})();
+
+</script>
+</body>
+</html>
